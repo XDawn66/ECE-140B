@@ -11,14 +11,14 @@ https://cors-anywhere.herokuapp.com/corsdemo
 
 Then just eneter the bar code (number for now to see)
 
-The current home page is:
+## The current home page is:
 
 app\public\luma_home.html
 
-The current backend is :
+## The current backend is :
 
 app\public\js\script.js
 
-The current css is:
+## The current css is:
 
 app\public\css\styles.css
