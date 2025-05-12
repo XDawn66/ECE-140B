@@ -27,4 +27,4 @@ services:
       - DB_NAME=retail_db
 
 volumes:
-  mysql_data: 
+  mysql_data:

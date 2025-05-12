@@ -1,0 +1,255 @@
+header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+ul > li {
+  display: inline-block;
+  float: none;
+  padding: 5%;
+}
+
+ul > li > a {
+  color: navy;
+}
+
+#info {
+  display: flex;
+  justify-content: center;
+}
+
+#about_us {
+  background-color: gray;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#demo {
+  display: flex;
+  justify-content: center;
+}
+
+footer {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: gray;
+}
+
+#login,
+#signup {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+label {
+  font-size: 1.2em;
+}
+
+#login-form,
+#signup-form > input {
+  margin-bottom: 3%;
+}
+
+#casual_clothes {
+  display: flex;
+  justify-content: center;
+}
+
+#formal_clothes {
+  display: flex;
+  justify-content: center;
+}
+
+.top_casual {
+  display: flex;
+  justify-content: space-between;
+}
+
+div button {
+  margin: 1rem;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 50px;
+  border: none;
+}
+
+.top_formal {
+  display: flex;
+  justify-content: space-between;
+}
+
+#casual_clothes {
+  background-color: antiquewhite;
+  border-radius: 5px;
+  color: white;
+  margin: 1rem;
+}
+
+#formal_clothes {
+  background-color: rgb(24, 23, 22);
+  border-radius: 5px;
+  color: white;
+  margin: 1rem;
+}
+
+div img {
+  border-radius: 2%;
+  width: 20vw;
+  height: auto;
+}
+
+#casual_title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  background-color: rgb(250, 255, 109);
+  width: 10vw;
+  height: 0.5vh;
+  margin-left: 1rem;
+  border-radius: 5px;
+}
+
+#formal_title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  background-color: rgb(184, 184, 184);
+  width: 10vw;
+  height: 0.5vh;
+  margin-left: 1rem;
+  border-radius: 5px;
+}
+
+figure {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  font-size: small;
+  margin: 3rem;
+}
+
+figcaption {
+  font-size: 1.5em;
+}
+
+#device_list {
+  width: 50vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: skyblue;
+  border-radius: 5px;
+  border: 2px solid rgb(38, 49, 210);
+  margin: 1.5rem;
+  padding: 1rem;
+}
+
+#device_list li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(61, 211, 121);
+  width: 45vw;
+  height: 1.5vh;
+  margin: 1rem;
+  border-radius: 5px;
+  padding: 1rem;
+  font-size: larger;
+  border: 2px solid rgb(35, 119, 149);
+}
+
+#title,
+.device h2,
+.device h3,
+.device h5,
+.device button {
+  margin-left: 1rem;
+}
+
+.device input {
+  margin-left: 1rem;
+  margin-bottom: 1rem;
+  width: 40vw;
+  height: 3vh;
+  background-color: rgb(67, 221, 180);
+  border-radius: 5px;
+  border: 2px solid skyblue;
+}
+
+.device input:focus {
+  background-color: lawngreen;
+}
+
+#logout_btn {
+  background-color: orangered;
+  border: 0;
+  border-radius: 20px;
+  padding: 0.8rem;
+}
+
+#add_device {
+  background-color: #6db8e8;
+  border: 0;
+  border-radius: 20px;
+  padding: 0.8rem;
+}
+
+#remove_device {
+  background-color: red;
+  border: 0;
+  border-radius: 20px;
+  padding: 0.8rem;
+}
+
+#logout_btn:hover,
+#add_casual:hover,
+#remove_casual:hover,
+#add_formal:hover,
+#remove_formal:hover,
+#remove_device:hover,
+#add_device:hover,
+#rename_btn:hover,  
+#get-ai:hover {
+  cursor: pointer;
+}
+
+#devices_container {
+  display: flex;
+}
+
+#rename_buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#update_btn {
+  background-color: rgb(113, 189, 227);
+  border: 0;
+  border-radius: 20px;
+  padding: 0.8rem;
+  margin-top: 0.2rem;
+  color: white;
+}
+
+.figcaption_container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 15vw;
+  margin: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgb(228, 155, 21);
+  border-radius: 5px;
+}
