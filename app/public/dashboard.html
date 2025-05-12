@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Weathery</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="public/js/dashboard.js"></script>
+    <link rel="stylesheet" href="/public/css/style.css" />
+  </head>
+  <body>
+    <header>
+      <section class="logo">
+        <img
+          src="../public/static/image.png"
+          width="100vw"
+          height="100vw"
+          style="border-radius: 50%"
+        />
+      </section>
+      <section class="navbar" style="width: 40%">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/wardrobe">Wardrobe</a></li>
+          <li><a href="/devices">Devices</a></li>
+        </ul>
+      </section>
+      <section class="login-signup">
+        <form action="/logout" method="POST" id="logouts">
+          <button type="submit" id="logout_btn">Log out</button>
+        </form>
+      </section>
+    </header>
+    <main>
+      <div class="container">
+        <h1>Weather Dashboard</h1>
+        <div id="weather-info">
+          <div id="itemsContainer">
+            <p id="location">Location: Loading...</p>
+          </div>
+          <p id="weatherCondition">Weather Condition: Loading...</p>
+          <p id="temperature">Temperature: Loading...</p>
+        </div>
+
+        <div id="image-container">
+          <img
+            id="weatherImage"
+            alt="Weather Image"
+            src=""
+            style="width: 30vw; height: 20vh"
+          />
+          <img
+            id="cityImage"
+            alt="City Image"
+            src=""
+            style="width: 30vw; height: 20vh"
+          />
+        </div>
+      </div>
+
+      <div class="container" id="esp32-container">
+        <h2>ESP32 Reading</h2>
+        <div class="chart-container">
+          <canvas id="tempChart"></canvas>
+        </div>
+      </div>
+      <div class="cotainer" id="AI">
+        <button id="get-ai" onclick="generateRecommendation()">
+          Generate me an outfit
+        </button>
+        <p id="write-here"></p>
+      </div>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          let DATAMAX = 50;
+          const ws = new WebSocket(
+            "wss://tech-assignment-final-project-henry-10o5.onrender.com/ws"
+          );
+
+          const ctx = document.getElementById("tempChart").getContext("2d");
+          const tempChart = new Chart(ctx, {
+            type: "line",
+            data: {
+              datasets: [],
+            },
+            options: {
+              animation: {
+                duration: 0,
+              },
+              scales: {
+                x: {
+                  type: "linear",
+                  ticks: {
+                    callback: function (value) {
+                      const date = new Date(value);
+                      const year = date.getFullYear();
+                      const month = ("0" + (date.getMonth() + 1)).slice(-2);
+                      const day = ("0" + date.getDate()).slice(-2);
+                      const hours = ("0" + date.getHours()).slice(-2);
+                      const minutes = ("0" + date.getMinutes()).slice(-2);
+                      const seconds = ("0" + date.getSeconds()).slice(-2);
+                      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                    },
+                  },
+                  title: {
+                    display: true,
+                    text: "Timestamp",
+                  },
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: "Temperature (°C)",
+                  },
+                },
+              },
+              responsive: true,
+            },
+          });
+          function getDatasetByMacaddr(macaddr) {
+            return tempChart.data.datasets.find(
+              (dataset) => dataset.label === macaddr
+            );
+          }
+          function getRandomColor() {
+            const letters = "ABCDEF0123456789";
+            let color = "#";
+            for (let i = 0; i < 6; i++) {
+              color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+          }
+          ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            data.forEach((item) => {
+              const time = item["timestamp"].replace(" ", "T");
+              const ts = new Date(time).getTime();
+              const tempValue = parseFloat(item.temperature);
+              const macaddr = item.macaddr;
+              let dataset = getDatasetByMacaddr(macaddr);
+              if (!dataset) {
+                dataset = {
+                  label: macaddr,
+                  data: [],
+                  borderColor: getRandomColor(),
+                  borderWidth: 2,
+                  fill: false,
+                  spanGaps: false,
+                  lineTension: 0,
+                };
+                tempChart.data.datasets.push(dataset);
+              }
+              dataset.data.push({ x: ts, y: tempValue });
+              if (dataset.data.length > DATAMAX && DATAMAX != -1) {
+                dataset.data.shift();
+              }
+            });
+            tempChart.update();
+          };
+          ws.onerror = function (event) {
+            console.error("WebSocket Error:", event);
+          };
+          ws.onclose = function (event) {
+            console.log("WebSocket connection closed:", event);
+          };
+        });
+      </script>
+    </main>
+    <footer>
+      <section class="logo">
+        <img
+          src="/public/static/image.png"
+          width="100vw"
+          height="100vw"
+          style="border-radius: 50%"
+        />
+      </section>
+      <section class="footbar" style="width: 40%">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/wardrobe">Wardrobe</a></li>
+          <li><a href="/devices">Devices</a></li>
+        </ul>
+      </section>
+      <section class="social-media">
+        <button onclick="location.href='http://instagram.com'" type="button">
+          Instagram
+        </button>
+        <button onclick="location.href='http://gmail.com'" type="button">
+          Email
+        </button>
+      </section>
+    </footer>
+  </body>
+</html>
