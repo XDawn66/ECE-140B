@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Low On | LUMA</title>
+  <link rel="stylesheet" href="/public/css/low_on.css" />
+  <script src="/public/js/low_on.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-left">
+      <img src="/public/static/Logo.png" alt="LUMA" class="logo-icon" />
+      <span class="logo-text">LUMA</span>
+    </div>
+    <nav class="header-nav">
+      <a href="/fridge">In the Fridge</a>
+      <a href="/low-on" class="active">Low On</a>
+      <a href="/grocery">Grocery List</a>
+    </nav>
+    <div class="header-right">
+      <form action="/logout" method="post">
+        <button type="submit" class="logout-btn">Log Out</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="low-page">
+    <h1>Low</h1>
+
+    <section class="subpanel">
+      <h2>Expired Now</h2>
+      <div id="expired-now" class="grid"></div>
+    </section>
+
+    <section class="subpanel">
+      <h2>Expires Next Week</h2>
+      <div id="expires-soon" class="grid"></div>
+    </section>
+  </main>
+</body>
+</html>

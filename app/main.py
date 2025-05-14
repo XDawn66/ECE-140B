@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List
 from contextlib import asynccontextmanager
 from mysql.connector import Error
 import traceback
@@ -15,10 +15,12 @@ from fastapi.responses import HTMLResponse, FileResponse
 import random
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,date
 from dotenv import load_dotenv
 import requests
 import os
+from .database import add_fridge_item, get_fridge_items_for_user
+
  
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -99,7 +101,7 @@ async def login_page(request: Request):
     #         user = await get_user_by_id(ses["user_id"])
     #         if user:
     #             return HTMLResponse(read_html("app/public/luma.html"))
-    return HTMLResponse(read_html("app/public/luma_home.html"))
+    return HTMLResponse(read_html("app/public/luma_starter.html"))
     
 @app.get('/login', response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -137,7 +139,7 @@ async def login(request: Request):
     #     return response
 
     session_id = str(uuid.uuid4())
-    html_body  = read_html("app/public/home.html")
+    html_body  = read_html("app/public/fridge.html")
     response   = HTMLResponse(html_body)
     response.set_cookie("session_id", session_id)
     await create_session(use["id"], session_id)
@@ -152,7 +154,7 @@ async def signup_page(request: Request):
             user = await get_user_by_id(ses["user_id"])
             if user:
                 return RedirectResponse(url=f"/")
-    return HTMLResponse(read_html("app/public/signup.html"))
+    return HTMLResponse(read_html("app/public/fridge.html"))
     
 @app.post('/signup', response_class=HTMLResponse)
 async def out(request: Request) -> HTMLResponse:
@@ -279,7 +281,7 @@ async def out(request: Request) -> HTMLResponse:
         if ses:
             user = await get_user_by_id(ses["user_id"])
             if user:
-                return HTMLResponse(read_html("app/public/dashboard.html"))
+                return HTMLResponse(read_html("app/public/fridge.html"))
     return RedirectResponse(url=f"/login")
 
 # @app.get('/location')
@@ -670,6 +672,72 @@ def delete_sensor_data(sensor_type: str, id: int):
     db.close()
 
     return {"message": "Data deleted successfully"}
+
+###################################
+
+class FridgeItem(BaseModel):
+    barcode: str
+    product_name: str
+    entry_date: date
+    exp_date: date
+
+class ScanPayload(BaseModel):
+    barcode: str
+
+@app.get("/fridge", response_model=List[FridgeItem])
+async def read_fridge(request: Request):
+    sid = request.cookies.get("session_id")
+    ses = await get_session(sid) if sid else None
+    if not ses:
+        raise HTTPException(401, "Not authenticated")
+    items = get_fridge_items_for_user(ses["user_id"])
+    return items
+
+@app.post("/api/fridge-items")
+async def add_fridge_item_endpoint(
+    request: Request,
+    item: FridgeItem
+):
+    sid = request.cookies.get("session_id")
+    if not sid:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    ses = await get_session(sid)
+    if not ses:
+        raise HTTPException(status_code=401, detail="Session expired")
+
+
+    from .database import add_fridge_item
+    add_fridge_item(
+        user_id     = ses["user_id"],
+        barcode     = item.barcode,
+        product_name= item.product_name,
+        entry_date  = item.entry_date,
+        exp_date    = item.exp_date
+    )
+
+    return {"ok": True}
+
+@app.get("/low-on", response_model=List[FridgeItem])
+async def low_on_page(request: Request):
+    check_session_time_out()
+    val = request.cookies.get('session_id')
+    if val:
+        ses = await get_session(val)
+        if ses:
+            user = await get_user_by_id(ses["user_id"])
+            if user:
+                return HTMLResponse(read_html("app/public/low_on.html"))
+    return RedirectResponse(url="/login")
+
+@app.get("/grocery", response_class=HTMLResponse)
+async def grocery_page(request: Request):
+    sid = request.cookies.get("session_id")
+    ses = await get_session(sid) if sid else None
+    if not ses:
+        return RedirectResponse(url="/login")
+    return HTMLResponse(read_html("app/public/grocery.html"))
+
+
 
 if __name__ == "__main__":
     uvicorn.run(app="app.main:app", host="0.0.0.0", port=6543, reload=True)

@@ -5,8 +5,9 @@ import time
 import logging
 import pandas as pd
 from dotenv import load_dotenv
-from typing import Optional
+from typing import Optional, List, Dict
 from mysql.connector import Error
+from datetime import date
 
 # Load environment variables
 load_dotenv()
@@ -95,6 +96,18 @@ def create_tables():
                 category VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
+        """,
+         "fridge_items": """
+            CREATE TABLE IF NOT EXISTS fridge_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                barcode VARCHAR(64)    NOT NULL,
+                product_name VARCHAR(255) NOT NULL,
+                entry_date DATE        NOT NULL,
+                exp_date DATE          NOT NULL,
+                created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
         """,
     }
 
@@ -230,3 +243,42 @@ def seed_database():
     db.commit()
     cursor.close()
     db.close()
+
+def add_fridge_item(
+    user_id: int,
+    barcode: str,
+    product_name: str,
+    entry_date: date,
+    exp_date: date
+) -> None:
+    conn = get_db_connection()
+    cur  = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO fridge_items 
+          (user_id, barcode, product_name, entry_date, exp_date)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (user_id, barcode, product_name, entry_date, exp_date),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def get_fridge_items_for_user(user_id: int) -> List[Dict]:
+    conn = get_db_connection()
+    cur  = conn.cursor(dictionary=True)
+    cur.execute(
+        """
+        SELECT barcode, product_name, entry_date, exp_date
+          FROM fridge_items
+         WHERE user_id = %s
+         ORDER BY entry_date DESC
+        """,
+        (user_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
