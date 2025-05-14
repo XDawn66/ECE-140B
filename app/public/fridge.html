@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Dashboard | LUMA</title>
+  <link rel="stylesheet" href="/public/css/fridge.css" />
+  <script src="/public/js/fridge.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav>
+      <a href="/">Luma</a>
+      <a href="/dashboard" class="active">In the Fridge</a>
+      <a href="/low-on">Low on</a>
+      <a href="/grocery">Grocery List</a>
+    </nav>
+  </header>
+
+  <main class="dashboard">
+    <!-- FRIDGE PANEL -->
+    <section class="panel fridge-panel">
+      <h1>Fridge</h1>
+      <div class="controls">
+        <button id="scan-btn">Scan Barcode</button>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search items…"
+        />
+      </div>
+      <div id="fridge-grid" class="grid"></div>
+    </section>
+
+    <!-- EXPIRED PANEL -->
+    <section class="panel expired-panel">
+      <h1>Expired</h1>
+      <div class="subpanel">
+        <h2>Expired now</h2>
+        <div id="expired-now" class="grid"></div>
+      </div>
+      <div class="subpanel">
+        <h2>Expires next week</h2>
+        <div id="expired-soon" class="grid"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

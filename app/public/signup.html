@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
     <head>
         <title>Signup</title>
@@ -81,4 +81,93 @@
             </section>
         </footer>
     </body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Sign up | LUMA</title>
+
+  <!-- page styles -->
+  <link rel="stylesheet" href="/public/css/signup.css" />
+
+  <!-- form behavior -->
+  <script src="/public/js/signup.js" defer></script>
+</head>
+<body>
+  <div class="signup-container">
+    <form
+      action="/signup"
+      method="POST"
+      id="signup-form"
+      class="signup-form"
+    >
+      <h1>Sign up To Luma</h1>
+
+      <label for="fname"></label>
+      <input
+        type="text"
+        id="fname"
+        name="fname"
+        placeholder="First Name"
+        required
+      />
+
+      <label for="lname"></label>
+      <input
+        type="text"
+        id="lname"
+        name="lname"
+        placeholder="Last Name"
+        required
+      />
+
+      <label for="user"></label>
+      <input
+        type="text"
+        id="user"
+        name="user"
+        placeholder="Username"
+        required
+      />
+
+      <label for="email"></label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="Email"
+        required
+      />
+
+      <label for="pword"></label>
+      <input
+        type="password"
+        id="pword"
+        name="pword"
+        placeholder="Password"
+        required
+      />
+
+
+      <button
+        type="submit"
+        class="btn"
+        id="signup-btn"
+        disabled
+      >
+        Sign Up
+      </button>
+
+      <p class="login-text">
+        Have an account?
+        <a href="/login">Login</a>
+      </p>
+    </form>
+  </div>
+</body>
 </html>

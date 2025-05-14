@@ -18,10 +18,10 @@ load_dotenv()
 # db_port = os.environ["MYSQL_PORT"]
 # db_ssl_ca = os.environ["MYSQL_SSL"]
 
-db_host = 'localhost'
-db_user = 'myuser'
-db_pass = 'mypassword'
-db_name = 'mydatabase'
+db_host = 'mysql'
+db_user = 'user'
+db_pass = 'password'
+db_name = 'retail_db'
 db_port = '3306'
 db_ssl_ca = '/path/to/ssl/ca.pem'
 
@@ -69,7 +69,6 @@ def create_tables():
                 email VARCHAR(255) NOT NULL UNIQUE,
                 fname VARCHAR(255) NOT NULL,
                 lname VARCHAR(255) NOT NULL,
-                location VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """,

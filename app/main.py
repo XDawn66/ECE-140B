@@ -39,7 +39,7 @@ from .database import (
     delete_session,
 )
 
-# create_tables()
+create_tables()
 
 # Request body model for inserting new data
 class SensorData(BaseModel):
@@ -54,7 +54,8 @@ def read_html(file_path: str) -> str:
 
 def get_error_html(username: str) -> str:
     error_html = read_html("app/public/error.html")
-    return error_html.replace("{username}", username)
+    safe_username = username if isinstance(username, str) else ""
+    return error_html.replace("{username}", safe_username)
 
 app = FastAPI()
 static_files = StaticFiles(directory='app/public')
@@ -73,6 +74,8 @@ def check_session_time_out():
              connection.commit()
      cursor.close()
      connection.close()
+
+
 
 @app.get('/API_KEY_PLEASE')
 async def API(request: Request):
@@ -113,19 +116,32 @@ async def login_page(request: Request):
 async def login(request: Request):
     """Validate credentials and create a new session if valid"""
     form = await request.form()
-    user = form.get("username")
-    pw = form.get("password")
-    use = await get_user_by_username(user)
+    user = form.get("user", "")
+    pw = form.get("pword", "")
+
+    if not user or not pw:
+        return HTMLResponse(get_error_html(user), status_code=403)
+    
+    use = await get_user_by_username(user.lower())
+
     if not use or use['password'] != pw:
         return HTMLResponse(get_error_html(user), status_code=403)
-    id = str(uuid.uuid4())
-    if use:
-        profile_html = read_html("app/public/luma_home.html")
-        response = HTMLResponse(profile_html)
-        response.set_cookie("session_id", id)
-        usering = await get_user_by_username(user.lower())
-        dosmth = await create_session(usering["id"], id)
-        return response
+    
+    # id = str(uuid.uuid4())
+    # if use:
+    #     profile_html = read_html("app/public/luma_home.html")
+    #     response = HTMLResponse(profile_html)
+    #     response.set_cookie("session_id", id)
+    #     usering = await get_user_by_username(user.lower())
+    #     dosmth = await create_session(usering["id"], id)
+    #     return response
+
+    session_id = str(uuid.uuid4())
+    html_body  = read_html("app/public/home.html")
+    response   = HTMLResponse(html_body)
+    response.set_cookie("session_id", session_id)
+    await create_session(use["id"], session_id)
+    return response
 
 @app.get('/signup', response_class=HTMLResponse)
 async def signup_page(request: Request):
@@ -146,7 +162,7 @@ async def out(request: Request) -> HTMLResponse:
     email = form.get("email")
     user = form.get("user")
     pword = form.get("pword")
-    location = form.get("location")
+    # location = form.get("location")
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     users = await get_user_by_username(user.lower())
@@ -160,8 +176,8 @@ async def out(request: Request) -> HTMLResponse:
             profile_html = read_html("app/public/home.html")
             response = HTMLResponse(profile_html)
             response.set_cookie("session_id", id)
-            insert_query = "INSERT INTO users (username, password, email, fname, lname, location) VALUES (%s, %s, %s, %s, %s, %s)"
-            cursor.execute(insert_query, (user.lower(), pword, email, fname, lname, location))
+            insert_query = "INSERT INTO users (username, password, email, fname, lname) VALUES (%s, %s, %s, %s, %s)"
+            cursor.execute(insert_query, (user.lower(), pword, email, fname, lname))
             connection.commit()
             usering = await get_user_by_username(user.lower())
             dosmth = await create_session(usering["id"], id)
@@ -266,19 +282,19 @@ async def out(request: Request) -> HTMLResponse:
                 return HTMLResponse(read_html("app/public/dashboard.html"))
     return RedirectResponse(url=f"/login")
 
-@app.get('/location')
-async def get_location(request: Request):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    val = request.cookies.get('session_id')
-    user_id = None
-    if val:
-        ses = await get_session(val)
-        if ses:
-            user_id = ses["user_id"]
-            cursor.execute(f'SELECT location FROM users WHERE id={user_id}')
-            return cursor.fetchall()
-    return "San Diego"
+# @app.get('/location')
+# async def get_location(request: Request):
+#     conn = get_db_connection()
+#     cursor = conn.cursor(dictionary=True)
+#     val = request.cookies.get('session_id')
+#     user_id = None
+#     if val:
+#         ses = await get_session(val)
+#         if ses:
+#             user_id = ses["user_id"]
+#             cursor.execute(f'SELECT location FROM users WHERE id={user_id}')
+#             return cursor.fetchall()
+#     return "San Diego"
 
 # Initial stock prices
 sensors = {
