@@ -1,84 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-  <title>Dashboard | LUMA</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | LUMA</title>
 
-  <!--  CSS -->
-  <link rel="stylesheet" href="/public/css/fridge.css" />
+    <!--  CSS -->
+    <link rel="stylesheet" href="/public/css/fridge.css" />
 
-  <!--  JS -->
-  <script src="/public/js/fridge.js" defer></script>
-</head>
-<body>
-  <header class="site-header">
-    <div class="header-left">
-      <img src="/public/static/Logo.png" alt="LUMA" class="logo-icon" />
-      <span class="logo-text">LUMA</span>
-    </div>
-
-    <nav class="header-nav">
-      <a href="/fridge" class="active">Fridge</a>
-      <a href="/low-on">Low On</a>
-      <a href="/grocery">Grocery List</a>
-    </nav>
-
-    <div class="header-right">
-      <form action="/logout" method="post">
-        <button type="submit" class="logout-btn">Log Out</button>
-      </form>
-    </div>
-  </header>
-
-  <main class="dashboard">
-    <!-- LOOKUP + ADD SECTION -->
-    <section class="panel lookup-panel">
-      <h1>Scan &amp; Add</h1>
-      <div class="controls">
-        <input
-          id="productId"
-          type="text"
-          placeholder="Enter or scan barcode…"
-        />
-        <button id="myButton">Scan</button>
+    <!--  JS -->
+    <script src="/public/js/fridge.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-left">
+        <img src="/public/static/Logo.png" alt="LUMA" class="logo-icon" />
+        <span class="logo-text">LUMA</span>
       </div>
-      <div class="lookup-result">
-        <img id="productImage" alt="" />
-        <div class="lookup-info">
-          <h3 id="productName"></h3>
-          <p id="productDescription"></p>
+
+      <nav class="header-nav">
+        <a href="/fridge" class="active">Fridge</a>
+        <a href="/low-on">Low On</a>
+        <a href="/grocery">Grocery List</a>
+      </nav>
+
+      <div class="header-right">
+        <form action="/logout" method="post">
+          <button type="submit" class="logout-btn">Log Out</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <!-- LOOKUP + ADD SECTION -->
+      <section class="panel lookup-panel">
+        <h1>Scan &amp; Add</h1>
+        <div class="controls">
+          <input
+            id="productId"
+            type="text"
+            placeholder="Enter or scan barcode…"
+          />
+          <button id="myButton">Scan</button>
         </div>
-      </div>
-    </section>
+        <div class="lookup-result">
+          <img id="productImage" alt="" />
+          <div class="lookup-info">
+            <h3 id="productName"></h3>
+            <p id="productDescription"></p>
+          </div>
+        </div>
+      </section>
 
-    <!-- FRIDGE PANEL -->
-    <section class="panel fridge-panel">
-      <h1>In Fridge</h1>
-      <input
-        id="search-input"
-        type="text"
-        placeholder="Search items…"
-        class="search-bar"
-      />
-      <div id="fridge-grid" class="grid"></div>
-    </section>
+      <!-- FRIDGE PANEL -->
+      <section class="panel fridge-panel">
+        <h1>In Fridge</h1>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search items…"
+          class="search-bar"
+        />
+        <div id="fridge-grid" class="grid"></div>
+      </section>
 
-    <!-- EXPIRED PANEL -->
-    <section class="panel expired-panel">
-      <h1>Expired Items</h1>
-      <div class="subpanel">
-        <h2>Expired Now</h2>
-        <div id="expired-now" class="grid"></div>
-      </div>
-      <div class="subpanel">
-        <h2>Expires Next Week</h2>
-        <div id="expired-soon" class="grid"></div>
-      </div>
-    </section>
-  </main>
-</body>
+      <!-- EXPIRED PANEL -->
+      <section class="panel expired-panel">
+        <h1>Expired Items</h1>
+        <div class="subpanel">
+          <h2>Expired Now</h2>
+          <div id="expired-now" class="grid"></div>
+        </div>
+        <div class="subpanel">
+          <h2>Expires Next Week</h2>
+          <div id="expired-soon" class="grid"></div>
+        </div>
+      </section>
+    </main>
+  </body>
 </html>

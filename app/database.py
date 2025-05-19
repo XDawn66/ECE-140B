@@ -24,12 +24,13 @@ db_user = 'user'
 db_pass = 'password'
 db_name = 'retail_db'
 db_port = '3306'
-db_ssl_ca = '/path/to/ssl/ca.pem'
+# db_ssl_ca = '/path/to/ssl/ca.pem'
 
  
  # Connect to the database and create a cursor object
 def get_db_connection():
-     return mysql.connect(host=db_host, database=db_name, user=db_user, passwd=db_pass, port=db_port, ssl_ca=db_ssl_ca)
+    #return mysql.connect(host=db_host, database=db_name, user=db_user, passwd=db_pass, port=db_port, ssl_ca=db_ssl_ca)
+    return mysql.connect(host=db_host, database=db_name, user=db_user, passwd=db_pass, port=db_port)
 
 # Function to create tables
 def create_tables():
@@ -37,31 +38,6 @@ def create_tables():
     cursor = db.cursor()
 
     tables = {
-        "temperature": """
-        CREATE TABLE IF NOT EXISTS temperature (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            value FLOAT NOT NULL,
-            unit VARCHAR(10) NOT NULL,
-            macaddr VARCHAR(255) NOT NULL,
-            timestamp DATETIME NOT NULL
-        );
-        """,
-        "humidity": """
-        CREATE TABLE IF NOT EXISTS humidity (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            value FLOAT NOT NULL,
-            unit VARCHAR(10) NOT NULL,
-            timestamp DATETIME NOT NULL
-        );
-        """,
-        "light": """
-        CREATE TABLE IF NOT EXISTS light (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            value FLOAT NOT NULL,
-            unit VARCHAR(10) NOT NULL,
-            timestamp DATETIME NOT NULL
-        );
-        """,
         "users": """
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -88,15 +64,7 @@ def create_tables():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """,
-        "wardrobe": """
-            CREATE TABLE IF NOT EXISTS wardrobe (
-                clothes VARCHAR(255) NOT NULL PRIMARY KEY,
-                types VARCHAR(255) NOT NULL,
-                user_id VARCHAR(255) NOT NULL,
-                category VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """,
+        
          "fridge_items": """
             CREATE TABLE IF NOT EXISTS fridge_items (
                 id INT AUTO_INCREMENT PRIMARY KEY,
