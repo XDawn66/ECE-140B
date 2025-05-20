@@ -125,7 +125,7 @@ async def login(request: Request):
     if not user or not pw:
         return HTMLResponse(get_error_html(user), status_code=403)
     
-    use = await get_user_by_username(user.lower())
+    use = await get_user_by_username(user.lower()) 
 
     if not use or use['password'] != pw:
         return HTMLResponse(get_error_html(user), status_code=403)
@@ -141,7 +141,7 @@ async def login(request: Request):
 
     session_id = str(uuid.uuid4())
     html_body  = read_html("app/public/fridge.html")
-    response   = HTMLResponse(html_body)
+    response   = HTMLResponse(html_body) 
     response.set_cookie("session_id", session_id)
     await create_session(use["id"], session_id)
     return response
@@ -154,7 +154,7 @@ async def signup_page(request: Request):
         if ses:
             user = await get_user_by_id(ses["user_id"])
             if user:
-                print(user)
+                print(user)  
                 return RedirectResponse(url=f"/")
     return HTMLResponse(read_html("app/public/signup.html"))
     
@@ -304,7 +304,21 @@ async def read_fridge(request: Request):
         if user:
             return HTMLResponse(read_html("app/public/fridge.html"))
     items = get_fridge_items_for_user(ses["user_id"])
+    
     return items
+
+@app.get("/api/fridge-items", response_model=List[FridgeItem])
+async def read_fridge_items(request: Request):
+    sid = request.cookies.get("session_id")
+    if not sid:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    ses = await get_session(sid)
+    if not ses:
+        raise HTTPException(status_code=401, detail="Session expired")
+
+    rows = get_fridge_items_for_user(ses["user_id"])
+    # rows should be a list of dicts or ORM objects matching schema
+    return rows
 
 @app.post("/api/fridge-items")
 async def add_fridge_item_endpoint(

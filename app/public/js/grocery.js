@@ -3,8 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const groceryGrid = document.getElementById("grocery-grid");
 
   // Fake data for testing
-  const fridgeItems = ["Milk", "Eggs", "Spinach", "Bread"];
-  const groceryItems = ["Milk", "Bread", "Bananas"];
+  // const fridgeItems = ["Milk", "Eggs", "Spinach", "Bread"];
+  // const groceryItems = ["Milk", "Bread", "Bananas"];
 
   fridgeItems.forEach((item) => {
     const div = document.createElement("div");

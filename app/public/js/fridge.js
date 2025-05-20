@@ -30,14 +30,11 @@ const expiration_table = {
 
 // starting state
 let current_fridge = {
-  egg: { date_into_fridge: "2023-10-01", expiration: 21, quantity: 1 },
-  Milk: { date_into_fridge: "2023-10-01", expiration: 7, quantity: 1 },
-  Lettuce: { date_into_fridge: "2023-10-01", expiration: 5, quantity: 1 },
-  // …etc…
+ 
 };
 
 // Renders the `current_fridge` object into the #fridge-grid
-function load_fromFridge() {
+function renderFridge() {
   fridgeGrid.innerHTML = "";
   const today = new Date();
 
@@ -59,6 +56,35 @@ function load_fromFridge() {
   }
 }
 
+function load_fromFridge() {
+  fetch("/api/fridge-items")
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to load fridge items");
+      return res.json();
+    })
+    .then((items) => {
+      current_fridge = {};
+      items.forEach((item) => {
+        const name = item.product_name;
+        const days = expiration_table[name] || 7;
+        if (!current_fridge[name]) {
+          current_fridge[name] = {
+            date_into_fridge: item.entry_date,
+            expiration: days,
+            quantity: 1,
+          };
+        } else {
+          current_fridge[name].quantity++;
+        }
+      });
+      renderFridge();
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("Could not load fridge: " + err.message);
+    });
+}
+
 // add an item into the current_fridge and re-render
 function add_toFridge(item_name, barcode, matchedItem) {
   const todayISO = new Date().toISOString().split("T")[0];
@@ -73,6 +99,7 @@ function add_toFridge(item_name, barcode, matchedItem) {
   } else {
     current_fridge[item_name].quantity++;
   }
+  renderFridge();
 
   fetch("/api/fridge-items", {
     method: "POST",
