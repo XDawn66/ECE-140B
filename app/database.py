@@ -72,7 +72,7 @@ def create_tables():
                 barcode VARCHAR(64)    NOT NULL,
                 product_name VARCHAR(255) NOT NULL,
                 entry_date DATE        NOT NULL,
-                exp_date DATE          NOT NULL,
+                exp_date DATE          NULL,
                 created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
@@ -217,7 +217,7 @@ def add_fridge_item(
     barcode: str,
     product_name: str,
     entry_date: date,
-    exp_date: date
+    exp_date: Optional[date] = None
 ) -> None:
     conn = get_db_connection()
     cur  = conn.cursor()

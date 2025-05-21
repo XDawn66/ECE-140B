@@ -283,12 +283,12 @@ async def logout(request:Request):
     return response
 
 ###################################
-
+ 
 class FridgeItem(BaseModel):
     barcode: str
     product_name: str
     entry_date: date
-    exp_date: date
+    exp_date: Optional[date] = None
 
 class ScanPayload(BaseModel):
     barcode: str
@@ -334,15 +334,19 @@ async def add_fridge_item_endpoint(
 
 
     from .database import add_fridge_item
-    add_fridge_item(
+    try:
+        add_fridge_item(
         user_id     = ses["user_id"],
         barcode     = item.barcode,
         product_name= item.product_name,
         entry_date  = item.entry_date,
         exp_date    = item.exp_date
     )
-
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Could not save item")
     return {"ok": True}
+
+    
 
 @app.get("/low-on", response_model=List[FridgeItem])
 async def low_on_page(request: Request):
