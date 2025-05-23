@@ -332,15 +332,14 @@ async def add_fridge_item_endpoint(
     if not ses:
         raise HTTPException(status_code=401, detail="Session expired")
 
-
-    from .database import add_fridge_item
+    print("post called")
     try:
         add_fridge_item(
         user_id     = ses["user_id"],
         barcode     = item.barcode,
         product_name= item.product_name,
         entry_date  = item.entry_date,
-        exp_date    = item.exp_date
+        exp_date    = item.exp_date if item.exp_date else None
     )
     except Exception as e:
         raise HTTPException(status_code=500, detail="Could not save item")

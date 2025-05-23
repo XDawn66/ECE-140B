@@ -7,6 +7,92 @@ const productImage = document.getElementById("productImage");
 const inputbarcode = document.getElementById("productId");
 const fridgeGrid = document.getElementById("fridge-grid");
 
+let apiresponse = {
+  status: 200,
+  products: [
+    {
+      barcode_number: "021130240302",
+      barcode_formats: "UPC-A 021130240302, EAN-13 0021130240302",
+      mpn: "",
+      model: "",
+      asin: "B01EI0RCCQ",
+      title: "Refreshe, Purified Drinking Water",
+      category: "Food, Beverages & Tobacco > Beverages > Water > Spring Water",
+      manufacturer: "Signature Select",
+      brand: "Refreshe",
+      contributors: [],
+      age_group: "",
+      ingredients: "Purified Water, Calcium Chloride, Sodium Bicarbonate**.",
+      nutrition_facts:
+        "Energy 0 kcal, Protein 0.00 g, Total lipid (fat) 0.00 g, Carbohydrate, by difference 0.00 g, Sodium, Na 0 mg",
+      energy_efficiency_class: "",
+      color: "",
+      gender: "",
+      material: "",
+      pattern: "",
+      format: "",
+      multipack: "",
+      size: "",
+      length: "7.75",
+      width: "7.13",
+      height: "9.13",
+      weight: "275",
+      release_date: "",
+      description: "Purified drinking water.",
+      features: ["Soft Amaretti", "product of Italy"],
+      images: ["https://images.barcodelookup.com/4739/47395152-1.jpg"],
+      last_update: "2024-06-22 14:06:12",
+      stores: [],
+      reviews: [],
+    },
+  ],
+};
+
+let apiresponse2 = {
+  status: 200,
+  products: [
+    {
+      barcode_number: "070847898245",
+      barcode_formats: "UPC-A 070847898245, EAN-13 0070847898245",
+      mpn: "",
+      model: "",
+      asin: "",
+      title: "Monster Ultra Blue Hawaiian, 16fl.oz CHOOSE YOUR PACK SIZE",
+      category: "",
+      manufacturer: "",
+      brand: "Monster Energy",
+      contributors: [],
+      age_group: "",
+      ingredients: "",
+      nutrition_facts: "",
+      energy_efficiency_class: "",
+      color: "",
+      gender: "",
+      material: "",
+      pattern: "",
+      format: "",
+      multipack: "",
+      size: "",
+      length: "",
+      width: "",
+      height: "",
+      weight: "",
+      release_date: "",
+      description:
+        "Whether youre in beast mode, vacay mode, or just chillin island style, Ultra Blue Hawaiian will fire you up to be your best! Blue Hawaiian is a killer combo of exotic island fruit flavors that are big on taste, but with zero sugar.",
+      features: [],
+      images: [
+        "https://images.barcodelookup.com/133207/1332072904-1.jpg",
+        "https://images.barcodelookup.com/133207/1332072904-2.jpg",
+        "https://images.barcodelookup.com/133207/1332072904-3.jpg",
+      ],
+      last_update: "2025-01-31 05:33:49",
+      stores: [],
+      reviews: [],
+    },
+  ],
+};
+
 // your expiration lookup
 const expiration_table = {
   Milk: 7,
@@ -29,9 +115,7 @@ const expiration_table = {
 };
 
 // starting state
-let current_fridge = {
- 
-};
+let current_fridge = {};
 
 // Renders the `current_fridge` object into the #fridge-grid
 function renderFridge() {
@@ -39,18 +123,20 @@ function renderFridge() {
   const today = new Date();
 
   for (const [name, meta] of Object.entries(current_fridge)) {
+    console.log("name =", name, "meta =", meta);
     const div = document.createElement("div");
     div.className = "item";
+    console.log("meta.expiration =", meta.expiration, typeof meta.expiration);
 
-    if (meta.expiration === null) {
+    if (!meta.expiration) {
       // no known expiration → special styling
       div.classList.add("no-expiration");
     } else {
       // compute real expiry date for colored states
       const entry = new Date(meta.date_into_fridge);
-      const exp   = new Date(entry.getTime() + meta.expiration * 86400000);
-      if (exp < today)              div.classList.add("expired");
-      else if (exp - today < 7*86400000) div.classList.add("soon");
+      const exp = new Date(entry.getTime() + meta.expiration * 86400000);
+      if (exp < today) div.classList.add("expired");
+      else if (exp - today < 7 * 86400000) div.classList.add("soon");
     }
 
     div.innerHTML = `<div class="label">${name} (${meta.quantity})</div>`;
@@ -68,7 +154,7 @@ function load_fromFridge() {
       current_fridge = {};
       items.forEach((item) => {
         const name = item.product_name;
-        const days = expiration_table[name] || 7;
+        const days = expiration_table[name] || null;
         if (!current_fridge[name]) {
           current_fridge[name] = {
             date_into_fridge: item.entry_date,
@@ -88,10 +174,16 @@ function load_fromFridge() {
 }
 
 // add an item into the current_fridge and re-render
-function add_toFridge(item_name, barcode, days = expiration_table[item_name] ?? null) {
+function add_toFridge(
+  item_name,
+  barcode,
+  days = expiration_table[item_name] ?? null
+) {
   const todayISO = new Date().toISOString().split("T")[0];
-
-  
+  const expDateISO =
+    days !== null
+      ? new Date(Date.now() + days * 86400000).toISOString().split("T")[0]
+      : null;
   if (!current_fridge[item_name]) {
     current_fridge[item_name] = {
       date_into_fridge: todayISO,
@@ -104,52 +196,52 @@ function add_toFridge(item_name, barcode, days = expiration_table[item_name] ?? 
   renderFridge();
 
   const payload = {
-  barcode:      barcode,
-  product_name: item_name,
-  entry_date:   todayISO,
-  exp_date:     expDateISO 
+    barcode: barcode,
+    product_name: item_name,
+    entry_date: todayISO,
+    exp_date: expDateISO,
   };
 
   if (days != null) {
-    payload.exp_date = new Date(Date.now() + days * 86400000).toISOString().split("T")[0];
+    payload.exp_date = new Date(Date.now() + days * 86400000)
+      .toISOString()
+      .split("T")[0];
   }
-  renderFridge;
+  renderFridge();
 
-  const expDateISO = days !== null
-    ? new Date(Date.now() + days * 86400000)
-        .toISOString()
-        .split("T")[0]
-    : null;
-
-
+  //save to the sql database
   fetch("/api/fridge-items", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-    barcode:      barcode,
-    product_name: item_name,
-    entry_date:   todayISO,
-    exp_date:     expDateISO,   // always present, even if null
+      barcode: barcode,
+      product_name: item_name,
+      entry_date: todayISO,
+      exp_date: expDateISO, // always present, even if null
     }),
   })
-  .then(res => {
-    if (!res.ok) return res.text().then(t => { throw new Error(t) });
-    return res.json();
-  })
-  .then(() => {
-    alert("Item saved to your fridge!");
-  })
-  .catch(err => {
-    console.error("Save failed:", err);
-    alert("Could not save: " + err.message);
-  });
+    .then((res) => {
+      if (!res.ok)
+        return res.text().then((t) => {
+          throw new Error(t);
+        });
+      return res.json();
+    })
+    .then(() => {
+      alert("Item saved to your fridge!");
+    })
+    .catch((err) => {
+      console.error("Save failed:", err);
+      alert("Could not save: " + err.message);
+    });
 
   load_fromFridge();
-  alert(`${item_name} added to fridge (×${current_fridge[item_name].quantity})`);
+  alert(
+    `${item_name} added to fridge (×${current_fridge[item_name].quantity})`
+  );
 }
-
 
 // existing expiration checker
 function get_expected_expiration(item_name) {
@@ -163,80 +255,81 @@ function get_expected_expiration(item_name) {
 
 // your lookup + scan button
 lookupButton.addEventListener("click", () => {
-  // const apiKey = "vbmp1grglop7pimfbyx5imbqwogmu8";
-  // const barcode = inputbarcode.value.trim();
-  // if (!barcode) return alert("Enter a barcode");
-  // const apiUrl = `https://cors-anywhere.herokuapp.com/https://api.barcodelookup.com/v3/products?barcode=${barcode}&key=${apiKey}`;
-  // const xhr = new XMLHttpRequest();
-  // xhr.open("GET", Url, true);
-  // xhr.onreadystatechange = () => {
-  //   if (xhr.readyState !== 4) return;
-  //   if (xhr.status === 200) {
-  //     const data = JSON.parse(xhr.responseText).products[0];
-  //     const title = data.title;
-  //     const desc = data.description || "";
-  //     const img = data.images[0] || "";
-  //     productName.textContent = title;
-  //     productDescription.textContent = desc;
-  //     productImage.src = img;
-  //     // find a match in expiration_table and add to fridge
-  //     for (let item in expiration_table) {
-  //       if (title.toLowerCase().includes(item.toLowerCase())) {
-  //         console.log("Matched:", item);
-  //         add_toFridge(item); // ← UNCOMMENTED HERE
-  //         get_expected_expiration(item);
-  //         break;
-  //       }
-  //     }
-  //   } else {
-  //     alert(`Lookup error ${xhr.status}: ${xhr.statusText}`);
-  //   }
-  // };
-  // xhr.send();
   const barcode = inputbarcode.value.trim();
   if (!barcode) {
     alert("Enter a barcode");
     return;
   }
+  data = apiresponse2; // #TODO: replace with actual API call
 
-  const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
+  const product = data.products[0];
+  const title = product.title;
+  const desc = product.description || "";
+  const img = product.images[0] || "";
 
-  fetch(apiUrl)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const product = data.products[0];
-      const title = product.title;
-      const desc = product.description || "";
-      const img = product.images[0] || "";
+  productName.textContent = title;
+  productDescription.textContent = desc;
+  productImage.src = img;
 
-      productName.textContent = title;
-      productDescription.textContent = desc;
-      productImage.src = img;
-
-      // Example logic to match expiration table
-      let matched = false;
-      for (let item in expiration_table) {
-        if (title.toLowerCase().includes(item.toLowerCase())) {
-          mathced = true;
-          console.log("Matched:", item);
-          add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
-          get_expected_expiration(item);
-          break;
-        }
-      }
-      if (!matched) {
-        add_toFridge(title, barcode, null);
+  // Example logic to match expiration table
+  let matched = false;
+  console.log(1);
+  for (let item in expiration_table) {
+    if (title.toLowerCase().includes(item.toLowerCase())) {
+      matched = true;
+      console.log("Matched:", item);
+      add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
+      get_expected_expiration(item);
+      console.log(2);
+      break;
     }
-    })
-    .catch((error) => {
-      console.error("Lookup failed:", error);
-      alert("Failed to fetch product info.");
-    });
+  }
+  console.log(3);
+  if (!matched) {
+    console.log(4);
+    add_toFridge(title, barcode, null);
+    alert("Item added to fridge with no expiration date: " + title);
+  }
+
+  // const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
+  // #TODO
+  // fetch(apiUrl)
+  //   .then((response) => {
+  //     if (!response.ok) {
+  //       throw new Error(`Error ${response.status}: ${response.statusText}`);
+  //     }
+  //     return response.json();
+  //   })
+  //   .then((data) => {
+  //     const product = data.products[0];
+  //     const title = product.title;
+  //     const desc = product.description || "";
+  //     const img = product.images[0] || "";
+
+  //     productName.textContent = title;
+  //     productDescription.textContent = desc;
+  //     productImage.src = img;
+
+  //     // Example logic to match expiration table
+  //     let matched = false;
+  //     console.log(1);
+  //     for (let item in expiration_table) {
+  //       if (title.toLowerCase().includes(item.toLowerCase())) {
+  //         matched = true;
+  //         console.log("Matched:", item);
+  //         add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
+  //         get_expected_expiration(item);
+  //         console.log(2);
+  //         break;
+  //       }
+  //     }
+  //     console.log(3);
+  //     if (!matched) {
+  //       console.log(4);
+  //       add_toFridge(title, barcode, null);
+  //       alert("Item added to fridge with no expiration date: " + title);
+  //     }
+  //   });
 });
 
 // initial render
