@@ -12,18 +12,18 @@ from datetime import date
 # Load environment variables
 load_dotenv()
 
-# db_host = os.environ['MYSQL_HOST']
-# db_user = os.environ['MYSQL_USER']
-# db_pass = os.environ['MYSQL_PASSWORD']
-# db_name = os.environ['MYSQL_DATABASE']
-# db_port = os.environ["MYSQL_PORT"]
-# db_ssl_ca = os.environ["MYSQL_SSL"]
+db_host = os.environ['DB_HOST']
+db_user = os.environ['DB_USER']
+db_pass = os.environ['DB_PASSWORD']
+db_name = os.environ['DB_NAME']
+db_port = os.environ["DB_PORT"]
 
-db_host = 'mysql'
-db_user = 'user'
-db_pass = 'password'
-db_name = 'retail_db'
-db_port = '3306'
+
+# db_host = 'mysql'
+# db_user = 'user'
+# db_pass = 'password'
+# db_name = 'retail_db'
+# db_port = '3306'
 # db_ssl_ca = '/path/to/ssl/ca.pem'
 
  
@@ -74,6 +74,7 @@ def create_tables():
                 entry_date DATE        NOT NULL,
                 exp_date DATE          NULL,
                 created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+                img_url VARCHAR(255) NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
         """,
@@ -217,17 +218,18 @@ def add_fridge_item(
     barcode: str,
     product_name: str,
     entry_date: date,
-    exp_date: Optional[date] = None
+    exp_date: Optional[date] = None,
+    img_url: Optional[str] = None
 ) -> None:
     conn = get_db_connection()
     cur  = conn.cursor()
     cur.execute(
         """
         INSERT INTO fridge_items 
-          (user_id, barcode, product_name, entry_date, exp_date)
-        VALUES (%s, %s, %s, %s, %s)
+          (user_id, barcode, product_name, entry_date, exp_date, img_url)
+        VALUES (%s, %s, %s, %s, %s, %s)
         """,
-        (user_id, barcode, product_name, entry_date, exp_date),
+        (user_id, barcode, product_name, entry_date, exp_date, img_url),
     )
     conn.commit()
     cur.close()
@@ -239,7 +241,7 @@ def get_fridge_items_for_user(user_id: int) -> List[Dict]:
     cur  = conn.cursor(dictionary=True)
     cur.execute(
         """
-        SELECT barcode, product_name, entry_date, exp_date
+        SELECT barcode, product_name, entry_date, exp_date, img_url
           FROM fridge_items
          WHERE user_id = %s
          ORDER BY entry_date DESC

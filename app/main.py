@@ -289,6 +289,7 @@ class FridgeItem(BaseModel):
     product_name: str
     entry_date: date
     exp_date: Optional[date] = None
+    img_url: Optional[str] = None
 
 class ScanPayload(BaseModel):
     barcode: str
@@ -332,16 +333,20 @@ async def add_fridge_item_endpoint(
     if not ses:
         raise HTTPException(status_code=401, detail="Session expired")
 
-    print("post called")
     try:
+        print(f"Adding item: {item}")
         add_fridge_item(
         user_id     = ses["user_id"],
         barcode     = item.barcode,
         product_name= item.product_name,
         entry_date  = item.entry_date,
-        exp_date    = item.exp_date if item.exp_date else None
+        exp_date    = item.exp_date if item.exp_date else None,
+        img_url     = item.img_url
     )
     except Exception as e:
+        print(f"Error adding fridge item: {e}")
+        logger.error(f"Error adding fridge item: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail="Could not save item")
     return {"ok": True}
 
@@ -379,6 +384,21 @@ def lookup(barcode: str):
         print(f"Error during barcode lookup: {e}")
         raise HTTPException(status_code=500, detail="Barcode lookup failed")
 
+@app.delete("/remove-fridge-items")
+async def remove_item( request: Request,
+    item: FridgeItem):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    val = request.cookies.get('session_id')
+    user = None
+    if val:
+        ses = await get_session(val)
+        if ses:
+            user = ses["user_id"]
+            cursor.execute('DELETE FROM fridge_items WHERE user_id = %s AND product_name = %s  AND entry_date = %s ', (user, item.product_name, item.entry_date))
+            connection.commit()
+        return
+    return
 
 if __name__ == "__main__":
     uvicorn.run(app="app.main:app", host="0.0.0.0", port=6543, reload=True)

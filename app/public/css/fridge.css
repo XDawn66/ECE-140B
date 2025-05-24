@@ -5,7 +5,7 @@
   box-sizing: border-box;
 }
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background: #f9fafb;
   color: #1f2937;
   min-height: 100vh;
@@ -160,13 +160,17 @@ a {
   background: #e2e3e5;
   border-radius: 0.25rem;
 }
-.item.expired { background-color: #f8d7da;  }
-.item.soon    { background-color: #10b981;  }
+.item.expired {
+  background-color: #f8d7da;
+}
+.item.soon {
+  background-color: #10b981;
+}
 
 /* new rule for no-expiration */
 .item.no-expiration {
-  background-color: #e2e3e5; 
-  border: 2px dashed #6c757d; 
+  background-color: #e2e3e5;
+  border: 2px dashed #6c757d;
 }
 .item .label {
   position: absolute;
@@ -176,8 +180,18 @@ a {
   font-size: 0.75rem;
   font-weight: 500;
   color: #fff;
-  text-shadow: 0 0 2px rgba(0,0,0,0.3);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
-
-
+#model-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* on top of other elements */
+}

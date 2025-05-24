@@ -1,4 +1,5 @@
 // app/public/js/fridge.js
+import { popupModal } from "./popup.js";
 
 const lookupButton = document.getElementById("myButton");
 const productName = document.getElementById("productName");
@@ -123,24 +124,62 @@ function renderFridge() {
   const today = new Date();
 
   for (const [name, meta] of Object.entries(current_fridge)) {
+    //create data object for popup card
+    console.log(current_fridge);
+    let data = {
+      titleTxt: name,
+      date_into_fridge: meta.date_into_fridge || "",
+      imgSrc: meta.img_url || "",
+      expiration: meta.expiration
+        ? new Date(meta.date_into_fridge).toISOString().split("T")[0]
+        : "",
+    };
     console.log("name =", name, "meta =", meta);
     const div = document.createElement("div");
     div.className = "item";
     console.log("meta.expiration =", meta.expiration, typeof meta.expiration);
 
-    if (!meta.expiration) {
+    if (meta.expiration === null) {
       // no known expiration → special styling
       div.classList.add("no-expiration");
     } else {
       // compute real expiry date for colored states
       const entry = new Date(meta.date_into_fridge);
       const exp = new Date(entry.getTime() + meta.expiration * 86400000);
+      data.entry = entry;
+      data.expiration = exp;
       if (exp < today) div.classList.add("expired");
       else if (exp - today < 7 * 86400000) div.classList.add("soon");
     }
 
     div.innerHTML = `<div class="label">${name} (${meta.quantity})</div>`;
     fridgeGrid.appendChild(div);
+
+    //a pop up with more info
+    div.addEventListener("click", () => {
+      let model = document.createElement("popup-card");
+      model.style.display = "block";
+      model.data = data;
+
+      const deleteButton = model.shadowRoot.getElementById("remove-button");
+      const editButton = model.shadowRoot.getElementById("edit-button");
+      deleteButton.addEventListener("click", () => {
+        removeItemFromFridge(name, date_into_fridge);
+        document.body.removeChild(overlay);
+      });
+
+      console.log("data =", data);
+      const overlay = document.createElement("div");
+      overlay.id = "model-overlay";
+
+      overlay.appendChild(model);
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          document.body.removeChild(overlay);
+        }
+      });
+      document.body.appendChild(overlay);
+    });
   }
 }
 
@@ -155,11 +194,14 @@ function load_fromFridge() {
       items.forEach((item) => {
         const name = item.product_name;
         const days = expiration_table[name] || null;
+        const img = item.img_url || "N/A"; // optional image URL
+        console.log("item =", item);
         if (!current_fridge[name]) {
           current_fridge[name] = {
             date_into_fridge: item.entry_date,
             expiration: days,
             quantity: 1,
+            img_url: img,
           };
         } else {
           current_fridge[name].quantity++;
@@ -177,7 +219,8 @@ function load_fromFridge() {
 function add_toFridge(
   item_name,
   barcode,
-  days = expiration_table[item_name] ?? null
+  days = expiration_table[item_name] ?? null,
+  img_src
 ) {
   const todayISO = new Date().toISOString().split("T")[0];
   const expDateISO =
@@ -220,6 +263,7 @@ function add_toFridge(
       product_name: item_name,
       entry_date: todayISO,
       exp_date: expDateISO, // always present, even if null
+      img_url: img_src || "N/A", // optional image URL
     }),
   })
     .then((res) => {
@@ -238,9 +282,7 @@ function add_toFridge(
     });
 
   load_fromFridge();
-  alert(
-    `${item_name} added to fridge (×${current_fridge[item_name].quantity})`
-  );
+  alert(`${item_name} added to fridge (${current_fridge[item_name].quantity})`);
 }
 
 // existing expiration checker
@@ -260,7 +302,7 @@ lookupButton.addEventListener("click", () => {
     alert("Enter a barcode");
     return;
   }
-  data = apiresponse2; // #TODO: replace with actual API call
+  let data = apiresponse; // #TODO: replace with actual API call
 
   const product = data.products[0];
   const title = product.title;
@@ -273,21 +315,20 @@ lookupButton.addEventListener("click", () => {
 
   // Example logic to match expiration table
   let matched = false;
-  console.log(1);
   for (let item in expiration_table) {
     if (title.toLowerCase().includes(item.toLowerCase())) {
       matched = true;
       console.log("Matched:", item);
-      add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
+      add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
       get_expected_expiration(item);
       console.log(2);
       break;
     }
   }
-  console.log(3);
+
   if (!matched) {
-    console.log(4);
-    add_toFridge(title, barcode, null);
+    console.log("img_src:", img);
+    add_toFridge(title, barcode, null, img);
     alert("Item added to fridge with no expiration date: " + title);
   }
 
@@ -331,6 +372,33 @@ lookupButton.addEventListener("click", () => {
   //     }
   //   });
 });
+
+function removeItemFromFridge(itemName, entryDate) {
+  if (!current_fridge[itemName]) {
+    alert("Item not found in fridge: " + itemName);
+    return;
+  }
+  current_fridge[itemName].quantity--;
+  if (current_fridge[itemName].quantity <= 0) {
+    delete current_fridge[itemName];
+  }
+  renderFridge();
+  fetch("/remove-fridge-items", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      product_name: itemName,
+      entry_date: entryDate,
+    }),
+  }).then((res) => {
+    if (!res.ok) {
+      console.error("Failed to remove item:", res.statusText);
+    }
+  });
+  alert(`${itemName} removed from fridge.`);
+}
 
 // initial render
 document.addEventListener("DOMContentLoaded", load_fromFridge);
