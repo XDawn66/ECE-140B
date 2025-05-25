@@ -385,9 +385,11 @@ def lookup(barcode: str):
         raise HTTPException(status_code=500, detail="Barcode lookup failed")
     
 
-@app.post("/update-fridge-items/{update_data}")
+@app.post("/update-fridge-items/{item_name}/{new_date}/{entry_date}")
 async def update_fridge_item(request: Request,
-    update_data: dict):
+    item_name:str,
+    new_date: str,
+    entry_date:str):
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     val = request.cookies.get('session_id')
@@ -396,15 +398,15 @@ async def update_fridge_item(request: Request,
         ses = await get_session(val)
         if ses:
             user = ses["user_id"]
-            cursor.execute('UPDATE fridge_items SET exp_date = %s WHERE user_id = %s AND product_name = %s  AND entry_date = %s ', (update_data["exp_date"], user, update_data["item_name"], update_data["entry_date"]))
+            cursor.execute('UPDATE fridge_items SET exp_date = %s WHERE user_id = %s AND product_name = %s  AND entry_date = %s ', (new_date, user, item_name, entry_date))
             connection.commit()
         return
     return
 
 
-@app.delete("/remove-fridge-items/{delete_data}")
+@app.delete("/remove-fridge-items/{item_name}/{entry_date}")
 async def remove_item(request: Request,
-    delete_data: dict):
+    item_name: str, entry_date:str):
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     val = request.cookies.get('session_id')
@@ -413,7 +415,7 @@ async def remove_item(request: Request,
         ses = await get_session(val)
         if ses:
             user = ses["user_id"]
-            cursor.execute('DELETE FROM fridge_items WHERE user_id = %s AND product_name = %s  AND entry_date = %s ', (user, delete_data["item_name"], delete_data["entry_date"]))
+            cursor.execute('DELETE FROM fridge_items WHERE user_id = %s AND product_name = %s  AND entry_date = %s ', (user, item_name, entry_date))
             connection.commit()
         return
     return

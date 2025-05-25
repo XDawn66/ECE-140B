@@ -166,7 +166,9 @@ a {
 .item.soon {
   background-color: #10b981;
 }
-
+.item.fresh {
+  background-color: #06ff49;
+}
 /* new rule for no-expiration */
 .item.no-expiration {
   background-color: #e2e3e5;

@@ -128,9 +128,7 @@ function renderFridge() {
       titleTxt: name,
       date_into_fridge: meta.date_into_fridge || "",
       imgSrc: meta.img_url || "",
-      expiration: meta.expiration
-        ? new Date(meta.date_into_fridge).toISOString().split("T")[0]
-        : "",
+      expiration: meta.expiration,
     };
 
     const div = document.createElement("div");
@@ -142,11 +140,14 @@ function renderFridge() {
     } else {
       // compute real expiry date for colored states
       const entry = new Date(meta.date_into_fridge);
-      const exp = new Date(entry.getTime() + meta.expiration * 86400000);
-      data.entry = entry;
-      data.expiration = exp;
+      const exp = new Date(
+        entry.getTime() + get_expected_expiration(name) * 86400000
+      );
+      console.log("Exp date:", entry);
+      console.log("Today date:", exp);
       if (exp < today) div.classList.add("expired");
       else if (exp - today < 7 * 86400000) div.classList.add("soon");
+      else div.classList.add("fresh");
     }
 
     div.innerHTML = `<div class="label">${name} (${meta.quantity})</div>`;
@@ -165,8 +166,16 @@ function renderFridge() {
         document.body.removeChild(overlay);
       });
 
+      //update the current expiration date base on name of the item + date_into_fridge
       editButton.addEventListener("click", () => {
-        update_expiration(name, data.expiration);
+        let newday = prompt("Please enter a new expiration date");
+        if (newday === null || newday.trim() === "") {
+          alert("Invalid expiration date");
+          return;
+        }
+        update_expiration(name, newday, data.date_into_fridge);
+        document.body.removeChild(overlay);
+        load_fromFridge(); // reload fridge to reflect changes
       });
 
       const overlay = document.createElement("div");
@@ -193,7 +202,7 @@ function load_fromFridge() {
       current_fridge = {};
       items.forEach((item) => {
         const name = item.product_name;
-        const days = expiration_table[name] || null;
+        const days = item.exp_date;
         const img = item.img_url || "N/A"; // optional image URL
 
         if (!current_fridge[name]) {
@@ -216,17 +225,13 @@ function load_fromFridge() {
 }
 
 // add an item into the current_fridge and re-render
-function add_toFridge(
-  item_name,
-  barcode,
-  days = expiration_table[item_name] ?? null,
-  img_src
-) {
+function add_toFridge(item_name, barcode, days, img_src) {
   const todayISO = new Date().toISOString().split("T")[0];
   const expDateISO =
     days !== null
       ? new Date(Date.now() + days * 86400000).toISOString().split("T")[0]
       : null;
+  console.log("Adding to fridge:", item_name, barcode, days, img_src);
   if (!current_fridge[item_name]) {
     current_fridge[item_name] = {
       date_into_fridge: todayISO,
@@ -236,6 +241,7 @@ function add_toFridge(
   } else {
     current_fridge[item_name].quantity++;
   }
+  console.log("Current fridge state22:", current_fridge);
   renderFridge();
 
   const payload = {
@@ -287,12 +293,12 @@ function add_toFridge(
 
 // existing expiration checker
 function get_expected_expiration(item_name) {
-  if (!expiration_table[item_name]) {
-    return alert("No expiration for “" + item_name + "”");
+  for (let item in expiration_table) {
+    if (item_name.toLowerCase().includes(item.toLowerCase())) {
+      return expiration_table[item];
+    }
   }
-  const now = new Date(),
-    d = new Date(now.getTime() + expiration_table[item_name] * 86400000);
-  alert(`${item_name} will expire on ${d.toLocaleDateString()}.`);
+  return -1; // not found
 }
 
 // your lookup + scan button
@@ -304,10 +310,10 @@ lookupButton.addEventListener("click", () => {
   }
   let data = apiresponse; // #TODO: replace with actual API call
 
-  const product = data.products[0];
-  const title = product.title;
-  const desc = product.description || "";
-  const img = product.images[0] || "";
+  let product = data.products[0];
+  let title = product.title;
+  let desc = product.description || "";
+  let img = product.images[0] || "";
 
   productName.textContent = title;
   productDescription.textContent = desc;
@@ -382,26 +388,23 @@ function removeItemFromFridge(itemName, entryDate) {
     delete current_fridge[itemName];
   }
   renderFridge();
-  let data = { item_name: itemName, entry_date: entryDate };
-  fetch(`/remove-fridge-items/${data}`, {
+
+  fetch(`/remove-fridge-items/${itemName}/${entryDate}`, {
     method: "DELETE",
   });
   alert(`${itemName} removed from fridge.`);
 }
 
-function update_expiration(itemName, newDays) {
+function update_expiration(itemName, newDays, entry_date) {
   if (!current_fridge[itemName]) {
     alert("Item not found in fridge: " + itemName);
     return;
   }
-  let update_data = {
-    item_name: itemName,
-    new_expiration: newDays,
-    entry_date: current_fridge[itemName].date_into_fridge,
-  };
-  fetch(`/update-fridge-items/${update_data}`, {
+  console.log(itemName, newDays, entry_date);
+  fetch(`/update-fridge-items/${itemName}/${newDays}/${entry_date}`, {
     method: "POST",
   });
+  alert("Successfully update the current expiration date to: ", newDays);
 }
 
 // initial render
