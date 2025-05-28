@@ -252,3 +252,41 @@ def get_fridge_items_for_user(user_id: int) -> List[Dict]:
     cur.close()
     conn.close()
     return rows
+
+
+from typing import Optional
+
+def get_fridge_items_for_user(
+    user_id: int,
+    search: Optional[str] = None
+) -> List[Dict]:
+    conn = get_db_connection()
+    cur  = conn.cursor(dictionary=True)
+
+    if search:
+        like_term = f"%{search}%"
+        cur.execute(
+            """
+            SELECT barcode, product_name, entry_date, exp_date, img_url
+              FROM fridge_items
+             WHERE user_id = %s
+               AND product_name LIKE %s
+             ORDER BY entry_date DESC
+            """,
+            (user_id, like_term),
+        )
+    else:
+        cur.execute(
+            """
+            SELECT barcode, product_name, entry_date, exp_date, img_url
+              FROM fridge_items
+             WHERE user_id = %s
+             ORDER BY entry_date DESC
+            """,
+            (user_id,),
+        )
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
