@@ -144,6 +144,7 @@ a {
   padding: 0.25rem 0.5rem;
   border-radius: 0;
 }
+
 .expired-panel .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -242,8 +243,8 @@ a {
 }
 /* new rule for no-expiration */
 .item.no-expiration {
-  background-color: #d1fae5;
-  border: 2px dashed #6c757d;
+  background-color: #72ba91;
+  border: 3px dashed #6c757d;
 }
 .item .label {
   position: absolute;

@@ -259,9 +259,34 @@ function renderExpiredPanels() {
     }
   }
 
-  // hide any empty subpanel (and its h2)
-  expiredNowSection.style.display  = hasExpired  ? "" : "none";
-  expiredSoonSection.style.display = hasSoon     ? "" : "none";
+  if (!hasExpired && !hasSoon) {
+    // No items at all → one panel, title “Expired”, and maybe a placeholder
+    expiredNowSection.style.display  = "";
+    expiredSoonSection.style.display = "none";
+    expiredNowSection.querySelector("h2").textContent = "Expired";
+    expiredNowGrid.innerHTML = `<div class="empty"></div>`;
+
+  } else if (hasExpired && !hasSoon) {
+    // Only expired‐now items
+    expiredNowSection.style.display  = "";
+    expiredSoonSection.style.display = "none";
+    expiredNowSection.querySelector("h2").textContent = "Expired Now";
+
+  } else if (!hasExpired && hasSoon) {
+    // Only next‐week items
+    expiredNowSection.style.display  = "";
+    expiredSoonSection.style.display = "none";
+    expiredNowSection.querySelector("h2").textContent = "Expires Next Week";
+    // move the “soon” cards into the first grid
+    expiredNowGrid.innerHTML = expiredSoonGrid.innerHTML;
+
+  } else {
+    // Both categories present
+    expiredNowSection.style.display  = "";
+    expiredSoonSection.style.display = "";
+    expiredNowSection.querySelector("h2").textContent  = "Expired Now";
+    expiredSoonSection.querySelector("h2").textContent = "Expires Next Week";
+  }
 }
 
 
@@ -317,6 +342,9 @@ function add_toFridge(item_name, barcode, days, img_src) {
   }
   console.log("Current fridge state22:", current_fridge);
   renderFridge();
+  if (typeof renderExpiredPanels === "function") {
+    renderExpiredPanels();
+  }
 
   const payload = {
     barcode: barcode,
@@ -383,7 +411,7 @@ if (lookupButton){
       alert("Enter a barcode");
       return;
     }
-    let data = apiresponse; // #TODO: replace with actual API call
+    let data = apiresponse1; // #TODO: replace with actual API call
 
     let product = data.products[0];
     let title = product.title;
@@ -464,6 +492,9 @@ function removeItemFromFridge(itemName, entryDate) {
     delete current_fridge[itemName];
   }
   renderFridge();
+  if (typeof renderExpiredPanels === "function") {
+    renderExpiredPanels();
+  }
 
   fetch(`/remove-fridge-items/${itemName}/${entryDate}`, {
     method: "DELETE",
