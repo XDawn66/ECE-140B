@@ -19,7 +19,7 @@ from datetime import datetime, timedelta,date
 from dotenv import load_dotenv
 import requests
 import os
-from .database import add_fridge_item, get_fridge_items_for_user
+from .database import add_fridge_item, get_fridge_items_for_user, add_low_on_item,get_low_on_items_for_user
 
  
 logging.basicConfig(level=logging.INFO)
@@ -363,6 +363,77 @@ async def low_on_page(request: Request):
             if user:
                 return HTMLResponse(read_html("app/public/low_on.html"))
     return RedirectResponse(url="/login")
+
+@app.get("/api/low-on-items")
+async def get_low_on_items(request: Request):
+    sid = request.cookies.get("session_id")
+    if not sid:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    ses = await get_session(sid)
+    if not ses:
+        raise HTTPException(status_code=401, detail="Session expired")
+
+    rows = get_low_on_items_for_user(ses["user_id"])
+    # rows should be a list of dicts or ORM objects matching schema
+    return rows
+
+@app.post("/api/add_low_list")
+async def add_low_list(request: Request):
+    data = await request.json()
+    product_name = data.get("product_name")
+    last_entry_date = data.get("last_entry_date")
+    img_url = data.get("img_url")
+
+    print("product_name:", repr(product_name))
+    print("last_entry_date:", repr(last_entry_date))
+    
+    sid = request.cookies.get("session_id")
+    if not sid:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    ses = await get_session(sid)
+    if not ses:
+        raise HTTPException(status_code=401, detail="Session expired")
+
+    try:
+        user = await get_user_by_id(ses["user_id"])
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+    # Add the item to the low_on table
+
+
+        add_low_on_item(
+            user_id=user["id"],
+            product_name=product_name,
+            last_entry_date=last_entry_date,
+            img_url=img_url
+        )
+    except Exception as e:
+        print(f"Error adding low on item: {e}")
+        logger.error(f"Error adding low on item: {e}")
+    
+@app.delete("/api/remove_low_list/{item_name}")
+async def remove_low_list_item(request: Request, item_name: str):
+    sid = request.cookies.get("session_id")
+    if not sid:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    ses = await get_session(sid)
+    if not ses:
+        raise HTTPException(status_code=401, detail="Session expired")
+
+    try:
+        user = await get_user_by_id(ses["user_id"])
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute('DELETE FROM low_on WHERE user_id = %s AND product_name = %s', (user["id"], item_name))
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(f"Error removing low on item: {e}")
+        logger.error(f"Error removing low on item: {e}")
 
 @app.get("/grocery", response_class=HTMLResponse)
 async def grocery_page(request: Request):

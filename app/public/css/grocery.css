@@ -1,10 +1,10 @@
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background: #f9fafb;
   color: #1f2937;
   min-height: 100vh;
@@ -65,12 +65,10 @@ a {
   background: #dc2626;
 }
 
-
-
 .grid-container {
   display: flex;
   justify-content: space-evenly;
-  padding: 20px;
+  padding: 30px;
 }
 
 .panel {
