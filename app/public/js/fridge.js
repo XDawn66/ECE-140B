@@ -222,9 +222,13 @@ function renderFridge(filter = "") {
 
   // Remove any previous controls
   let controlWrapper = shadow.querySelector("#expiration-controls");
+  let dateWrapper = shadow.querySelector("#expiration-date");
   if (controlWrapper) controlWrapper.remove();
+  if(dateWrapper) dateWrapper.remove()
 
   // Create wrapper div for controls
+  dateWrapper = document.createElement("div");
+   dateWrapper.id = "expiration-date";
   controlWrapper = document.createElement("div");
   controlWrapper.id = "expiration-controls";
 
@@ -239,9 +243,11 @@ function renderFridge(filter = "") {
     dateDisplay.textContent = `New expiration: ${newday}`;
   };
 
-  controlWrapper.appendChild(dateDisplay);
+  dateWrapper.appendChild(dateDisplay);
 
   // Button creator
+  const buttonRow = document.createElement("div");
+buttonRow.classList.add("exp-button-row");
   const addButton = (label, delta) => {
     const btn = document.createElement("button");
     btn.textContent = label;
@@ -252,7 +258,49 @@ function renderFridge(filter = "") {
     };
     controlWrapper.appendChild(btn);
   };
+  const style = document.createElement("style");
+style.textContent = `
+  #expiration-controls {
+    margin: 1em auto;
+    display: flex;
+    flex-direction: row;
+    gap: 0.75em;
+    width: 100%;
+    max-width: 300px;
+    align-items: stretch;
+  }
 
+  .exp-button,
+  .exp-save,
+  .exp-cancel {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    transition: background-color 0.2s ease;
+  }
+
+  .exp-button:hover,
+  .exp-save:hover,
+  .exp-cancel:hover {
+    background-color: #dcdcdc;
+  }
+
+  .exp-save {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .exp-cancel {
+    background-color: #f44336;
+    color: white;
+  }
+`;
+
+model.shadowRoot.appendChild(style);
   // Create increment/decrement buttons
   addButton("-1 Day", -1);
   addButton("-1 Week", -7);
@@ -281,6 +329,7 @@ function renderFridge(filter = "") {
   controlWrapper.appendChild(cancelBtn);
 
   // Append everything to the popup-card shadow DOM
+  shadow.appendChild(dateWrapper);
   shadow.appendChild(controlWrapper);
 });
       const overlay = document.createElement("div");
