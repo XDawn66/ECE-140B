@@ -29,7 +29,7 @@ load_dotenv()
 
 EMAIL = "example@ucsd.edu"
 PID = "cc"
-apiKey = "oyiimv1msh9f66dtomkhcqnhceanzg";
+apiKey = "oyiimv1msh9f66dtomkhcqnhceanzg"
 
 from .database import (
     create_tables,
@@ -309,7 +309,11 @@ async def read_fridge(request: Request):
     return items
 
 @app.get("/api/fridge-items", response_model=List[FridgeItem])
-async def read_fridge_items(request: Request):
+async def read_fridge_items(
+    request: Request,
+    search: Optional[str] = Query(None, description="Filter by product name")
+):
+    
     sid = request.cookies.get("session_id")
     if not sid:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -318,7 +322,6 @@ async def read_fridge_items(request: Request):
         raise HTTPException(status_code=401, detail="Session expired")
 
     rows = get_fridge_items_for_user(ses["user_id"])
-    # rows should be a list of dicts or ORM objects matching schema
     return rows
 
 @app.post("/api/fridge-items")
@@ -490,6 +493,7 @@ async def remove_item(request: Request,
             connection.commit()
         return
     return
+
 
 if __name__ == "__main__":
     uvicorn.run(app="app.main:app", host="0.0.0.0", port=6543, reload=True)

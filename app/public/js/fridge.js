@@ -8,6 +8,21 @@ const productImage = document.getElementById("productImage");
 const inputbarcode = document.getElementById("productId");
 const fridgeGrid = document.getElementById("fridge-grid");
 
+const expiredPanel = document.querySelector(".expired-panel");
+let expiredNowSection, expiredSoonSection, expiredNowGrid, expiredSoonGrid;
+
+if (expiredPanel) {
+  expiredNowSection = expiredPanel.querySelector(".subpanel:nth-of-type(1)");
+  expiredSoonSection = expiredPanel.querySelector(".subpanel:nth-of-type(2)");
+  expiredNowGrid = document.getElementById("expired-now");
+  expiredSoonGrid = document.getElementById("expired-soon");
+}
+
+// try the old #search-input, fall back to the grocery page’s .search-bar
+const searchInput =
+  document.getElementById("search-input") ||
+  document.querySelector(".fridge-panel .search-bar");
+
 let apiresponse = {
   status: 200,
   products: [
@@ -119,9 +134,10 @@ const expiration_table = {
 let current_fridge = {};
 
 // Renders the `current_fridge` object into the #fridge-grid
-function renderFridge() {
+function renderFridge(filter = "") {
   fridgeGrid.innerHTML = "";
   const today = new Date();
+  const q = filter.trim().toLowerCase();
 
   for (const [name, meta] of Object.entries(current_fridge)) {
     let data = {
@@ -130,9 +146,12 @@ function renderFridge() {
       imgSrc: meta.img_url || "",
       expiration: meta.expiration,
     };
+    if (q && !name.toLowerCase().includes(q)) continue;
 
     const div = document.createElement("div");
-    div.className = "item";
+    div.classList.add("item");
+
+    const expDate = meta.expiration ? new Date(meta.expiration) : null;
 
     if (meta.expiration === null) {
       // no known expiration → special styling
@@ -140,9 +159,19 @@ function renderFridge() {
     } else {
       // compute real expiry date for colored states
       const entry = new Date(meta.date_into_fridge);
-      const exp = new Date(
-        entry.getTime() + get_expected_expiration(name) * 86400000
-      );
+      let exp;
+
+      if (
+        typeof meta.expiration === "string" &&
+        meta.expiration.match(/^\d{4}-\d{2}-\d{2}$/)
+      ) {
+        // meta.expiration came from the DB as YYYY-MM-DD
+        exp = new Date(meta.expiration);
+      } else {
+        // fallback to lookup-table days
+        const days = get_expected_expiration(name);
+        exp = new Date(entry.getTime() + days * 86400000);
+      }
 
       if (exp < today) div.classList.add("expired");
       else if (exp - today < 7 * 86400000) div.classList.add("soon");
@@ -191,7 +220,70 @@ function renderFridge() {
   }
 }
 
-function load_fromFridge() {
+function renderExpiredPanels() {
+  if (!expiredPanel) return;
+  const expiredHeader = expiredPanel.querySelector("h1");
+  if (expiredHeader) {
+    expiredHeader.style.display = "none";
+  }
+
+  expiredNowGrid.innerHTML = "";
+  expiredSoonGrid.innerHTML = "";
+
+  const today = new Date();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+
+  let hasExpired = false;
+  let hasSoon = false;
+
+  for (const [name, meta] of Object.entries(current_fridge)) {
+    if (!meta.expiration) continue;
+    const expDate = new Date(meta.expiration);
+    if (isNaN(expDate)) continue;
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<div class="label">${name} (${meta.quantity})</div>`;
+
+    if (expDate < today) {
+      div.classList.add("expired");
+      expiredNowGrid.appendChild(div);
+      hasExpired = true;
+    } else if (expDate - today < weekMs) {
+      div.classList.add("soon");
+      expiredSoonGrid.appendChild(div);
+      hasSoon = true;
+    }
+  }
+
+  if (!hasExpired && !hasSoon) {
+    // No items at all → one panel, title “Expired”, and maybe a placeholder
+    expiredNowSection.style.display = "";
+    expiredSoonSection.style.display = "none";
+    expiredNowSection.querySelector("h2").textContent = "Expired";
+    expiredNowGrid.innerHTML = `<div class="empty"></div>`;
+  } else if (hasExpired && !hasSoon) {
+    // Only expired‐now items
+    expiredNowSection.style.display = "";
+    expiredSoonSection.style.display = "none";
+    expiredNowSection.querySelector("h2").textContent = "Expired Now";
+  } else if (!hasExpired && hasSoon) {
+    // Only next‐week items
+    expiredNowSection.style.display = "";
+    expiredSoonSection.style.display = "none";
+    expiredNowSection.querySelector("h2").textContent = "Expires Next Week";
+    // move the “soon” cards into the first grid
+    expiredNowGrid.innerHTML = expiredSoonGrid.innerHTML;
+  } else {
+    // Both categories present
+    expiredNowSection.style.display = "";
+    expiredSoonSection.style.display = "";
+    expiredNowSection.querySelector("h2").textContent = "Expired Now";
+    expiredSoonSection.querySelector("h2").textContent = "Expires Next Week";
+  }
+}
+
+async function load_fromFridge() {
   fetch("/api/fridge-items")
     .then((res) => {
       if (!res.ok) throw new Error("Failed to load fridge items");
@@ -216,6 +308,7 @@ function load_fromFridge() {
         }
       });
       renderFridge();
+      if (expiredPanel) renderExpiredPanels();
     })
     .catch((err) => {
       console.error(err);
@@ -240,6 +333,9 @@ function add_toFridge(item_name, barcode, days, img_src) {
     current_fridge[item_name].quantity++;
   }
   renderFridge();
+  if (typeof renderExpiredPanels === "function") {
+    renderExpiredPanels();
+  }
 
   const payload = {
     barcode: barcode,
@@ -306,71 +402,82 @@ lookupButton.addEventListener("click", () => {
     return;
   }
   let data = apiresponse2; // #TODO: replace with actual API call
-  let product = data.products[0];
-  let title = product.title;
-  let desc = product.description || "";
-  let img = product.images[0] || "";
+  if (lookupButton) {
+    lookupButton.addEventListener("click", () => {
+      const barcode = inputbarcode.value.trim();
+      if (!barcode) {
+        alert("Enter a barcode");
+        return;
+      }
+      // #TODO: replace with actual API call
 
-  productName.textContent = title;
-  productDescription.textContent = desc;
-  productImage.src = img;
+      let product = data.products[0];
+      let title = product.title;
+      let desc = product.description || "";
+      let img = product.images[0] || "";
 
-  // Example logic to match expiration table
-  let matched = false;
-  for (let item in expiration_table) {
-    if (title.toLowerCase().includes(item.toLowerCase())) {
-      matched = true;
+      productName.textContent = title;
+      productDescription.textContent = desc;
+      productImage.src = img;
 
-      add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
-      get_expected_expiration(item);
-      break;
-    }
+      // Example logic to match expiration table
+      let matched = false;
+      for (let item in expiration_table) {
+        if (title.toLowerCase().includes(item.toLowerCase())) {
+          matched = true;
+
+          add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
+          get_expected_expiration(item);
+          break;
+        }
+      }
+
+      if (!matched) {
+        add_toFridge(title, barcode, null, img);
+        alert("Item added to fridge with no expiration date: " + title);
+      }
+
+      // const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
+      // #TODO
+      // fetch(apiUrl)
+      //   .then((response) => {
+      //     if (!response.ok) {
+      //       throw new Error(`Error ${response.status}: ${response.statusText}`);
+      //     }
+      //     return response.json();
+      //   })
+      //   .then((data) => {
+      //     const product = data.products[0];
+      //     const title = product.title;
+      //     const desc = product.description || "";
+      //     const img = product.images[0] || "";
+
+      //     productName.textContent = title;
+      //     productDescription.textContent = desc;
+      //     productImage.src = img;
+
+      //     // Example logic to match expiration table
+      //     let matched = false;
+      //     console.log(1);
+      //     for (let item in expiration_table) {
+      //       if (title.toLowerCase().includes(item.toLowerCase())) {
+      //         matched = true;
+      //         console.log("Matched:", item);
+      //         add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
+      //         get_expected_expiration(item);
+      //         console.log(2);
+      //         break;
+      //       }
+      //     }
+      //     console.log(3);
+      //     if (!matched) {
+      //       console.log(4);
+      //       add_toFridge(title, barcode, null);
+      //       alert("Item added to fridge with no expiration date: " + title);
+      //     }
+      //   });
+    });
   }
-
-  if (!matched) {
-    add_toFridge(title, barcode, null, img);
-    alert("Item added to fridge with no expiration date: " + title);
-  }
-
-  // const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
-  // #TODO
-  // fetch(apiUrl)
-  //   .then((response) => {
-  //     if (!response.ok) {
-  //       throw new Error(`Error ${response.status}: ${response.statusText}`);
-  //     }
-  //     return response.json();
-  //   })
-  //   .then((data) => {
-  //     const product = data.products[0];
-  //     const title = product.title;
-  //     const desc = product.description || "";
-  //     const img = product.images[0] || "";
-
-  //     productName.textContent = title;
-  //     productDescription.textContent = desc;
-  //     productImage.src = img;
-
-  //     // Example logic to match expiration table
-  //     let matched = false;
-  //     console.log(1);
-  //     for (let item in expiration_table) {
-  //       if (title.toLowerCase().includes(item.toLowerCase())) {
-  //         matched = true;
-  //         console.log("Matched:", item);
-  //         add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
-  //         get_expected_expiration(item);
-  //         console.log(2);
-  //         break;
-  //       }
-  //     }
-  //     console.log(3);
-  //     if (!matched) {
-  //       console.log(4);
-  //       add_toFridge(title, barcode, null);
-  //       alert("Item added to fridge with no expiration date: " + title);
-  //     }
-  //   });
 });
 
 function removeItemFromFridge(itemName, entryDate) {
@@ -392,6 +499,9 @@ function removeItemFromFridge(itemName, entryDate) {
     delete current_fridge[itemName];
   }
   renderFridge();
+  if (typeof renderExpiredPanels === "function") {
+    renderExpiredPanels();
+  }
 
   fetch(`/remove-fridge-items/${itemName}/${entryDate}`, {
     method: "DELETE",
@@ -424,5 +534,13 @@ function add_ToLowOnList(item_name, last_entry_date, img_src) {
   });
 }
 
-// initial render
-document.addEventListener("DOMContentLoaded", load_fromFridge);
+if (searchInput) {
+  document.addEventListener("DOMContentLoaded", () => {
+    load_fromFridge().then(() => {
+      renderFridge(searchInput.value);
+    });
+  });
+  searchInput.addEventListener("input", (e) => renderFridge(e.target.value));
+}
+
+export { load_fromFridge, renderFridge, current_fridge };

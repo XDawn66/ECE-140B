@@ -76,23 +76,91 @@ a {
 .panel {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
   padding: 1rem;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .lookup-panel {
   max-width: 25%;
 }
+.lookup-panel h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #111827;
+  border-bottom: 2px solid #10b981;
+  padding-bottom: 0.5rem;
+}
 .fridge-panel {
   max-width: 35%;
 }
+.fridge-panel h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #111827;
+  border-bottom: 2px solid #10b981;
+  padding-bottom: 0.5rem;
+}
 .expired-panel {
   max-width: 35%;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  padding: 1rem;
 }
-.expired-panel .subpanel + .subpanel {
-  margin-top: 1.5rem;
+.expired-panel h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #111827;
+  border-bottom: 2px solid #10b981;
+  padding-bottom: 0.5rem;
+}
+.expired-panel > h1 {
+  font-size: 1.5rem;
+  color: #111827;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #10b981;
+  padding-bottom: 0.5rem;
+}
+.expired-panel .subpanel {
+  margin-bottom: 1.5rem;
+  border-radius: 0;
+}
+.expired-panel .subpanel:nth-of-type(1) h2 {
+  color: #111827;               /* white text */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0;
+}
+.expired-panel .subpanel h2 {
+  font-size: 1.5rem;                   
+  color: #111827;                     
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #10b981;   
+  padding-bottom: 0.5rem;
+  border-radius: 0;    
+}
+.expired-panel .subpanel:nth-of-type(2) h2 {
+  color: #111827;             
+  padding: 0.25rem 0.5rem;
+  border-radius: 0;
 }
 
+.expired-panel .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.75rem;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.expired-panel .grid .item.expired {
+  background-color: #fe6a6a;  /* red */
+  border-color:  #fd1c1c;
+}
+
+.expired-panel .grid .item.soon {
+  background-color: #fef08a;  /* yellowish-green */
+  border-color:  #fde047;
+}
 /* --- Controls & Lookup --- */
 .controls {
   display: flex;
@@ -161,18 +229,22 @@ a {
   border-radius: 0.25rem;
 }
 .item.expired {
-  background-color: #f8d7da;
+  background-color: #10b981;
+  border: 2px solid #059669;
+  color: #fff;  
 }
 .item.soon {
   background-color: #10b981;
+  border: 2px solid #059669; 
 }
 .item.fresh {
-  background-color: #06ff49;
+  background-color: #10b981;
+  border: 2px solid #059669;
 }
 /* new rule for no-expiration */
 .item.no-expiration {
-  background-color: #e2e3e5;
-  border: 2px dashed #6c757d;
+  background-color: #72ba91;
+  border: 3px dashed #6c757d;
 }
 .item .label {
   position: absolute;
