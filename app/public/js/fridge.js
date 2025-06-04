@@ -197,6 +197,7 @@ function renderFridge(filter = "") {
       });
 
       //update the current expiration date base on name of the item + date_into_fridge
+      /*
       editButton.addEventListener("click", () => {
         let newday = prompt("Please enter a new expiration date");
         if (newday === null || newday.trim() === "") {
@@ -207,7 +208,81 @@ function renderFridge(filter = "") {
         document.body.removeChild(overlay);
         load_fromFridge(); // reload fridge to reflect changes
       });
+      */
+      editButton.addEventListener("click", () => {
+  // Get expected expiration date
+  const shelfLifeDays = get_expected_expiration(name);
+  let currentDate = new Date(data.date_into_fridge);
+  currentDate.setDate(currentDate.getDate() + shelfLifeDays);
 
+  let newday = currentDate.toISOString().split("T")[0];
+
+  // Access shadow DOM of <popup-card>
+  const shadow = model.shadowRoot;
+
+  // Remove any previous controls
+  let controlWrapper = shadow.querySelector("#expiration-controls");
+  if (controlWrapper) controlWrapper.remove();
+
+  // Create wrapper div for controls
+  controlWrapper = document.createElement("div");
+  controlWrapper.id = "expiration-controls";
+
+  // Date display
+  const dateDisplay = document.createElement("div");
+  dateDisplay.textContent = `New expiration: ${newday}`;
+  dateDisplay.style.fontWeight = "bold";
+  dateDisplay.style.marginBottom = "0.5em";
+
+  const updateDisplay = () => {
+    newday = currentDate.toISOString().split("T")[0];
+    dateDisplay.textContent = `New expiration: ${newday}`;
+  };
+
+  controlWrapper.appendChild(dateDisplay);
+
+  // Button creator
+  const addButton = (label, delta) => {
+    const btn = document.createElement("button");
+    btn.textContent = label;
+    btn.classList.add("exp-button");
+    btn.onclick = () => {
+      currentDate.setDate(currentDate.getDate() + delta);
+      updateDisplay();
+    };
+    controlWrapper.appendChild(btn);
+  };
+
+  // Create increment/decrement buttons
+  addButton("-1 Day", -1);
+  addButton("-1 Week", -7);
+  addButton("+1 Day", 1);
+  addButton("+1 Week", 7);
+
+  // Save button
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Save";
+  saveBtn.classList.add("exp-save");
+  saveBtn.onclick = () => {
+    update_expiration(name, newday, data.date_into_fridge);
+    document.body.removeChild(document.getElementById("model-overlay"));
+    load_fromFridge();
+  };
+
+  // Cancel button
+  const cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "Cancel";
+  cancelBtn.classList.add("exp-cancel");
+  cancelBtn.onclick = () => {
+    document.body.removeChild(document.getElementById("model-overlay"));
+  };
+
+  controlWrapper.appendChild(saveBtn);
+  controlWrapper.appendChild(cancelBtn);
+
+  // Append everything to the popup-card shadow DOM
+  shadow.appendChild(controlWrapper);
+});
       const overlay = document.createElement("div");
       overlay.id = "model-overlay";
 
@@ -411,13 +486,13 @@ if (lookupButton){
       alert("Enter a barcode");
       return;
     }
-    let data = apiresponse1; // #TODO: replace with actual API call
+    let data = apiresponse; // #TODO: replace with actual API call
 
     let product = data.products[0];
     let title = product.title;
     let desc = product.description || "";
     let img = product.images[0] || "";
-
+    //console.log(title)
     productName.textContent = title;
     productDescription.textContent = desc;
     productImage.src = img;
@@ -427,7 +502,7 @@ if (lookupButton){
     for (let item in expiration_table) {
       if (title.toLowerCase().includes(item.toLowerCase())) {
         matched = true;
-
+        console.log(item)
         add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
         get_expected_expiration(item);
 

@@ -269,3 +269,39 @@ a {
   align-items: center;
   z-index: 1000; /* on top of other elements */
 }
+
+#expiration-controls {
+  margin-top: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
+.exp-button,
+.exp-save,
+.exp-cancel {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.1em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.exp-button:hover,
+.exp-save:hover,
+.exp-cancel:hover {
+  background-color: #dcdcdc;
+}
+
+.exp-save {
+  background-color: #4caf50;
+  color: white;
+}
+
+.exp-cancel {
+  background-color: #f44336;
+  color: white;
+}
