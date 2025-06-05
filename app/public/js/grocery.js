@@ -1,76 +1,79 @@
-// app/public/js/grocery.js
-import { load_fromFridge, renderFridge, current_fridge } from "./fridge.js";
+let current_low_on_list = {};
+document.addEventListener("DOMContentLoaded", () => {
+  const fridgeGrid = document.getElementById("fridge-grid");
+  const fridgeItems = ["Milk", "Eggs", "Spinach", "Bread"];
 
-import { popupModal }                                  from "./popup.js";
+  fridgeItems.forEach((item) => {
+    const div = document.createElement("div");
+    div.textContent = item;
+    fridgeGrid.appendChild(div);
+  });
 
-const fridgeSearchInput  = document.querySelector(".fridge-panel .search-bar");
-const grocerySearchInput = document.querySelector(".grocery-panel .search-bar");
-const groceryGrid        = document.getElementById("grocery-grid");
-
-
-document.addEventListener("DOMContentLoaded", async () => {
-  // — 1) Populate & render the fridge panel exactly like /dashboard
-  await load_fromFridge();
-  renderFridge(fridgeSearchInput.value);
-  fridgeSearchInput.addEventListener("input", e =>
-    renderFridge(e.target.value)
-  );
-
-  // — 2) Build your grocery-list array from the same current_fridge state
-  const groceryItems = Object.entries(current_fridge).map(
-    ([name, meta]) => ({
-      product_name: name,
-      entry_date:   meta.date_into_fridge,
-      exp_date:     meta.expiration,
-      img_url:      meta.img_url,
-      quantity:     meta.quantity,
-    })
-  );
-
-  // — 3) Render & hook up search for your grocery panel
-  renderGrocery(grocerySearchInput.value, groceryItems);
-  grocerySearchInput.addEventListener("input", e =>
-    renderGrocery(e.target.value, groceryItems)
-  );
+  //  Load and then render
+  get_low_list(render_grocery_items);
 });
+function render_grocery_items() {
+  const groceryGrid = document.getElementById("grocery-grid");
 
-/**
- * Renders the Grocery grid using the same “.item” cards & pop-ups
- */
-function renderGrocery(filter = "", items = []) {
-  groceryGrid.innerHTML = "";
-  const q = filter.trim().toLowerCase();
+  Object.keys(current_low_on_list).forEach((item) => {
+    console.log("Adding item to grocery grid:", item);
 
-  items.forEach(item => {
-    // search-filter
-    if (q && !item.product_name.toLowerCase().includes(q)) return;
+    const itemData = current_low_on_list[item];
 
-    // card
-    const card = document.createElement("div");
-    card.className = "item";
-    card.innerHTML = `<div class="label">${item.product_name} (${item.quantity})</div>`;
+    const div = document.createElement("div");
+    div.classList.add("grocery-item");
+    div.textContent = `Name: ${item}\nQty: 1`;
+    console.log("Item data:", itemData);
+    if (itemData.img_url) {
+      console.log("Adding image for item:", item);
+      const imgElement = document.createElement("img");
+      imgElement.src = itemData.img_url;
+      imgElement.alt = item;
+      div.appendChild(imgElement);
+    }
 
-    // popup on click
-    card.addEventListener("click", () => {
-      const model = document.createElement("popup-card");
-      model.style.display = "block";
-      model.data = {
-        titleTxt:         item.product_name,
-        date_into_fridge: item.entry_date,
-        imgSrc:           item.img_url,
-        expiration:       item.exp_date,
-      };
+    div.textContent += `\nLast Added: ${itemData.last_added || "N/A"}`;
 
-      const overlay = document.createElement("div");
-      overlay.id = "model-overlay";
-      overlay.append(model);
-      document.body.append(overlay);
-
-      overlay.addEventListener("click", e => {
-        if (e.target === overlay) overlay.remove();
-      });
+    let button = document.createElement("button");
+    button.textContent = "Remove";
+    button.addEventListener("click", (e) => {
+      e.stopPropagation();
+      remove_FromLowOnList(item);
+      groceryGrid.removeChild(div);
     });
 
-    groceryGrid.append(card);
+    div.appendChild(button);
+    groceryGrid.appendChild(div);
+  });
+}
+
+function get_low_list(callback) {
+  fetch(`/api/low-on-items`)
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to load low list items");
+      return res.json();
+    })
+    .then((items) => {
+      items.forEach((item) => {
+        const name = item.product_name;
+        const days = item.last_entry_date;
+        const img = item.img_url || "N/A";
+        current_low_on_list[name] = {
+          last_added: days,
+          img_url: img,
+        };
+      });
+
+      if (callback) callback(); // trigger render after data is ready
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("Could not load low list: " + err.message);
+    });
+}
+
+function remove_FromLowOnList(item_name) {
+  fetch(`/api/remove_low_list/${item_name}`, {
+    method: "DELETE",
   });
 }

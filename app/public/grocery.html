@@ -1,63 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Grocery List | LUMA</title>
-  <link rel="stylesheet" href="/public/css/grocery.css" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grocery List | LUMA</title>
+    <link rel="stylesheet" href="/public/css/grocery.css" />
 
-  <!-- LUMA theme CSS -->
-  <link rel="stylesheet" href="/public/css/grocery.css" />
+    <!-- LUMA theme CSS -->
+    <link rel="stylesheet" href="/public/css/grocery.css" />
 
-  <!-- First load the fridge module so grocery.js can import from it -->
-  <script type="module" src="/public/js/fridge.js" defer></script>
-  <!-- Then load your grocery-specific logic -->
-  <script type="module" src="/public/js/grocery.js" defer></script>
-</head>
-<body>
-  <header class="site-header">
-    <div class="header-left">
-      <img src="/public/static/Logo.png" alt="LUMA" class="logo-icon" />
-      <span class="logo-text">LUMA</span>
-    </div>
-    <nav class="header-nav">
-      <a href="/dashboard">Fridge</a>
-      <!-- <a href="/low-on">Low on</a> -->
-      <a href="/grocery" class="active">Grocery List</a>
-    </nav>
-    <div class="header-right">
-      <form action="/logout" method="post">
-        <button type="submit" class="logout-btn">Log Out</button>
-      </form>
-    </div>
-  </header>
-
-  <main class="grid-container">
-    <section class="panel fridge-panel">
-      <h1>Fridge</h1>
-      <div class="toolbar">
-        <!-- <button>Details</button> -->
-        <input id="search-input"
-       type="text"
-       placeholder="Search item…"
-       class="search-bar" />
-
+    <!-- First load the fridge module so grocery.js can import from it -->
+    <script type="module" src="/public/js/fridge.js" defer></script>
+    <!-- Then load your grocery-specific logic -->
+    <script type="module" src="/public/js/grocery.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-left">
+        <img src="/public/static/Logo.png" alt="LUMA" class="logo-icon" />
+        <span class="logo-text">LUMA</span>
       </div>
-      <div id="fridge-grid" class="grid"></div>
-    </section>
+      <nav class="header-nav">
+        <a href="/dashboard">Fridge</a>
+        <!-- <a href="/low-on">Low on</a> -->
+        <a href="/grocery" class="active">Grocery List</a>
+      </nav>
+      <div class="header-right">
+        <form action="/logout" method="post">
+          <button type="submit" class="logout-btn">Log Out</button>
+        </form>
+      </div>
+    </header>
 
-    <section class="panel grocery-panel">
-      <h1>Grocery List</h1>
-      <div class="toolbar">
+    <main class="grid-container">
+      <section class="panel fridge-panel">
+        <h1>Fridge</h1>
+        <div class="toolbar">
+          <!-- <button>Details</button> -->
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search item…"
+            class="search-bar"
+          />
+        </div>
+        <div id="fridge-grid" class="grid"></div>
+      </section>
+
+      <section class="panel grocery-panel">
+        <h1>Grocery List</h1>
+        <!-- <div class="toolbar">
         <button>Confirm List</button>
         <input id="search-input"
        type="text"
        placeholder="Search item…"
        class="search-bar" />
 
-      </div>
-      <div id="grocery-grid" class="grid"></div>
-    </section>
-  </main>
-</body>
+      </div> -->
+        <div id="grocery-grid" class="grid"></div>
+      </section>
+    </main>
+  </body>
 </html>

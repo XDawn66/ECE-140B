@@ -78,6 +78,17 @@ def create_tables():
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
         """,
+        "low_on": """
+            CREATE TABLE IF NOT EXISTS low_on (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                product_name VARCHAR(255) NOT NULL,
+                last_entry_date DATE        NOT NULL,
+                created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+                img_url VARCHAR(255) NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+        """,
     }
 
     for table, query in tables.items():
@@ -253,39 +264,38 @@ def get_fridge_items_for_user(user_id: int) -> List[Dict]:
     conn.close()
     return rows
 
-
-from typing import Optional
-
-def get_fridge_items_for_user(
+def add_low_on_item(
     user_id: int,
-    search: Optional[str] = None
-) -> List[Dict]:
+    product_name: str,
+    last_entry_date: date,
+    img_url: Optional[str] = None
+) -> None:
     conn = get_db_connection()
-    cur  = conn.cursor(dictionary=True)
+    cur  = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO low_on 
+          (user_id, product_name, last_entry_date, img_url)
+        VALUES (%s, %s, %s, %s)
+        """,
+        (user_id, product_name, last_entry_date, img_url),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
 
-    if search:
-        like_term = f"%{search}%"
-        cur.execute(
-            """
-            SELECT barcode, product_name, entry_date, exp_date, img_url
-              FROM fridge_items
-             WHERE user_id = %s
-               AND product_name LIKE %s
-             ORDER BY entry_date DESC
-            """,
-            (user_id, like_term),
-        )
-    else:
-        cur.execute(
-            """
-            SELECT barcode, product_name, entry_date, exp_date, img_url
-              FROM fridge_items
-             WHERE user_id = %s
-             ORDER BY entry_date DESC
-            """,
-            (user_id,),
-        )
-
+def get_low_on_items_for_user(user_id: int) -> List[Dict]:
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute(
+        """
+        SELECT product_name, last_entry_date, img_url
+          FROM low_on
+         WHERE user_id = %s
+         ORDER BY last_entry_date DESC
+        """,
+        (user_id,),
+    )
     rows = cur.fetchall()
     cur.close()
     conn.close()
