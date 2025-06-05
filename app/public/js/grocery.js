@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   //  Load and then render
   get_low_list(render_grocery_items);
+  groceryItems.forEach((item) => {
+    const div = document.createElement("div");
+    div.textContent = `Name: ${item}\nQty: 1`;
+    groceryGrid.appendChild(div);
+  });
 });
 function render_grocery_items() {
   const groceryGrid = document.getElementById("grocery-grid");

@@ -1,14 +1,33 @@
 // app/public/js/fridge.js
 import { popupModal } from "./popup.js";
 
-const lookupButton = document.getElementById("myButton");
-const productName = document.getElementById("productName");
-const productDescription = document.getElementById("productDescription");
-const productImage = document.getElementById("productImage");
-const inputbarcode = document.getElementById("productId");
+//const lookupButton = document.getElementById("myButton");
+// const productName = document.getElementById("productName");
+// const productDescription = document.getElementById("productDescription");
+// const productImage = document.getElementById("productImage");
+// const inputbarcode = document.getElementById("productId");
 const fridgeGrid = document.getElementById("fridge-grid");
 
 const expiredPanel = document.querySelector(".expired-panel");
+
+const fabMainButton = document.getElementById("fab-main");
+const fabOptionsDiv  = document.getElementById("fab-options");
+const fabCustomBtn   = document.getElementById("fab-custom");
+const fabScanBtn     = document.getElementById("fab-scan");
+
+fabMainButton.addEventListener("click", () => {
+  fabOptionsDiv.classList.toggle("hidden");
+});
+
+fabCustomBtn.addEventListener("click", () => {
+  fabOptionsDiv.classList.add("hidden");
+  showCustomItemOverlay();
+});
+fabScanBtn.addEventListener("click", () => {
+  fabOptionsDiv.classList.add("hidden");
+  showScanOverlay();
+});
+
 let expiredNowSection, expiredSoonSection, expiredNowGrid, expiredSoonGrid;
 
 if (expiredPanel) {
@@ -18,7 +37,7 @@ if (expiredPanel) {
   expiredSoonGrid = document.getElementById("expired-soon");
 }
 
-// try the old #search-input, fall back to the grocery page’s .search-bar
+
 const searchInput =
   document.getElementById("search-input") ||
   document.querySelector(".fridge-panel .search-bar");
@@ -133,216 +152,245 @@ const expiration_table = {
 // starting state
 let current_fridge = {};
 
-// Renders the `current_fridge` object into the #fridge-grid
+
 function renderFridge(filter = "") {
   fridgeGrid.innerHTML = "";
   const today = new Date();
   const q = filter.trim().toLowerCase();
 
-  for (const [name, meta] of Object.entries(current_fridge)) {
-    let data = {
-      titleTxt: name,
-      date_into_fridge: meta.date_into_fridge || "",
-      imgSrc: meta.img_url || "",
-      expiration: meta.expiration,
-    };
-    if (q && !name.toLowerCase().includes(q)) continue;
+  Object.entries(current_fridge).forEach(([name, meta]) => {
+    if (q && !name.toLowerCase().includes(q)) return;
+
 
     const div = document.createElement("div");
     div.classList.add("item");
 
-    const expDate = meta.expiration ? new Date(meta.expiration) : null;
 
     if (meta.expiration === null) {
-      // no known expiration → special styling
       div.classList.add("no-expiration");
     } else {
-      // compute real expiry date for colored states
       const entry = new Date(meta.date_into_fridge);
-      let exp;
-
+      let expDate;
       if (
         typeof meta.expiration === "string" &&
-        meta.expiration.match(/^\d{4}-\d{2}-\d{2}$/)
+        /^\d{4}-\d{2}-\d{2}$/.test(meta.expiration)
       ) {
-        // meta.expiration came from the DB as YYYY-MM-DD
-        exp = new Date(meta.expiration);
+        expDate = new Date(meta.expiration);
       } else {
-        // fallback to lookup-table days
-        const days = get_expected_expiration(name);
-        exp = new Date(entry.getTime() + days * 86400000);
+        const shelf = get_expected_expiration(name);
+        expDate = new Date(entry.getTime() + shelf * 86400000);
       }
-
-      if (exp < today) div.classList.add("expired");
-      else if (exp - today < 7 * 86400000) div.classList.add("soon");
-      else div.classList.add("fresh");
+      if (expDate < today) {
+        div.classList.add("expired");
+      } else if (expDate - today < 7 * 86400000) {
+        div.classList.add("soon");
+      } else {
+        div.classList.add("fresh");
+      }
     }
 
-    div.innerHTML = `<div class="label">${name} (${meta.quantity})</div>`;
+
+    const labelDiv = document.createElement("div");
+    labelDiv.classList.add("label");
+    labelDiv.textContent = `${name} (${meta.quantity})`;
+
+    div.appendChild(labelDiv);
+
     fridgeGrid.appendChild(div);
 
-    //a pop up with more info
+    // pop-up with choices
     div.addEventListener("click", () => {
-      let model = document.createElement("popup-card");
-      model.style.display = "block";
-      model.data = data;
-
-      const deleteButton = model.shadowRoot.getElementById("remove-button");
-      const editButton = model.shadowRoot.getElementById("edit-button");
-      deleteButton.addEventListener("click", () => {
-        removeItemFromFridge(name, data.date_into_fridge);
-        document.body.removeChild(overlay);
-      });
-
-      //update the current expiration date base on name of the item + date_into_fridge
-      /*
-      editButton.addEventListener("click", () => {
-        let newday = prompt("Please enter a new expiration date");
-        if (newday === null || newday.trim() === "") {
-          alert("Invalid expiration date");
-          return;
-        }
-        update_expiration(name, newday, data.date_into_fridge);
-        document.body.removeChild(overlay);
-        load_fromFridge(); // reload fridge to reflect changes
-      });
-      */
-      editButton.addEventListener("click", () => {
-  // Get expected expiration date
-  const shelfLifeDays = get_expected_expiration(name);
-  let currentDate = new Date(data.date_into_fridge);
-  currentDate.setDate(currentDate.getDate() + shelfLifeDays);
-
-  let newday = currentDate.toISOString().split("T")[0];
-
-  // Access shadow DOM of <popup-card>
-  const shadow = model.shadowRoot;
-
-  // Remove any previous controls
-  let controlWrapper = shadow.querySelector("#expiration-controls");
-  let dateWrapper = shadow.querySelector("#expiration-date");
-  if (controlWrapper) controlWrapper.remove();
-  if(dateWrapper) dateWrapper.remove()
-
-  // Create wrapper div for controls
-  dateWrapper = document.createElement("div");
-   dateWrapper.id = "expiration-date";
-  controlWrapper = document.createElement("div");
-  controlWrapper.id = "expiration-controls";
-
-  // Date display
-  const dateDisplay = document.createElement("div");
-  dateDisplay.textContent = `New expiration: ${newday}`;
-  dateDisplay.style.fontWeight = "bold";
-  dateDisplay.style.marginBottom = "0.5em";
-
-  const updateDisplay = () => {
-    newday = currentDate.toISOString().split("T")[0];
-    dateDisplay.textContent = `New expiration: ${newday}`;
-  };
-
-  dateWrapper.appendChild(dateDisplay);
-
-  // Button creator
-  const buttonRow = document.createElement("div");
-buttonRow.classList.add("exp-button-row");
-  const addButton = (label, delta) => {
-    const btn = document.createElement("button");
-    btn.textContent = label;
-    btn.classList.add("exp-button");
-    btn.onclick = () => {
-      currentDate.setDate(currentDate.getDate() + delta);
-      updateDisplay();
-    };
-    controlWrapper.appendChild(btn);
-  };
-  const style = document.createElement("style");
-style.textContent = `
-  #expiration-controls {
-    margin: 1em auto;
-    display: flex;
-    flex-direction: row;
-    gap: 0.75em;
-    width: 100%;
-    max-width: 300px;
-    align-items: stretch;
-  }
-
-  .exp-button,
-  .exp-save,
-  .exp-cancel {
-    width: 100%;
-    padding: 16px;
-    font-size: 1.1em;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #f0f0f0;
-    transition: background-color 0.2s ease;
-  }
-
-  .exp-button:hover,
-  .exp-save:hover,
-  .exp-cancel:hover {
-    background-color: #dcdcdc;
-  }
-
-  .exp-save {
-    background-color: #4caf50;
-    color: white;
-  }
-
-  .exp-cancel {
-    background-color: #f44336;
-    color: white;
-  }
-`;
-
-model.shadowRoot.appendChild(style);
-  // Create increment/decrement buttons
-  addButton("-1 Day", -1);
-  addButton("-1 Week", -7);
-  addButton("+1 Day", 1);
-  addButton("+1 Week", 7);
-
-  // Save button
-  const saveBtn = document.createElement("button");
-  saveBtn.textContent = "Save";
-  saveBtn.classList.add("exp-save");
-  saveBtn.onclick = () => {
-    update_expiration(name, newday, data.date_into_fridge);
-    document.body.removeChild(document.getElementById("model-overlay"));
-    load_fromFridge();
-  };
-
-  // Cancel button
-  const cancelBtn = document.createElement("button");
-  cancelBtn.textContent = "Cancel";
-  cancelBtn.classList.add("exp-cancel");
-  cancelBtn.onclick = () => {
-    document.body.removeChild(document.getElementById("model-overlay"));
-  };
-
-  controlWrapper.appendChild(saveBtn);
-  controlWrapper.appendChild(cancelBtn);
-
-  // Append everything to the popup-card shadow DOM
-  shadow.appendChild(dateWrapper);
-  shadow.appendChild(controlWrapper);
-});
+      // 2a) Build overlay
       const overlay = document.createElement("div");
-      overlay.id = "model-overlay";
-
-      overlay.appendChild(model);
+      overlay.classList.add("modal-overlay");
+      overlay.id = "generic-modal";
       overlay.addEventListener("click", (e) => {
         if (e.target === overlay) {
           document.body.removeChild(overlay);
         }
       });
+
+
+      const modalBox = document.createElement("div");
+      modalBox.classList.add("modal-content");
+
+      // Back arrow button 
+      const backBtn = document.createElement("button");
+      backBtn.classList.add("modal-close"); // reuse same styling as close “×”
+      backBtn.innerHTML = "←";
+      backBtn.style.position = "absolute";
+      backBtn.style.top = ".75rem";
+      backBtn.style.right = "22rem";
+      backBtn.addEventListener("click", () => {
+        editSection.style.display = "none";
+        choiceRow.style.display = "flex";
+      });
+      modalBox.appendChild(backBtn);
+
+
+      // Item image
+      if (meta.img_url && meta.img_url !== "N/A") {
+        const imgEl = document.createElement("img");
+        imgEl.src = meta.img_url;
+        imgEl.alt = name;
+        imgEl.classList.add("modal-item-image");
+        imgEl.style.display = "block";
+        imgEl.style.margin = "1rem auto 0 auto";
+        imgEl.style.width = "100px";
+        imgEl.style.height = "100px";
+        imgEl.style.objectFit = "cover";
+        imgEl.style.border = "1px solid #e5e7eb";
+        imgEl.style.borderRadius = "0.25rem";
+        modalBox.appendChild(imgEl);
+      }
+
+
+      const titleH2 = document.createElement("h2");
+      titleH2.classList.add("modal-title");
+      titleH2.textContent = name;
+      titleH2.style.textAlign = "center";
+      titleH2.style.marginTop = meta.img_url && meta.img_url !== "N/A" ? "0.5rem" : "1rem";
+      modalBox.appendChild(titleH2);
+
+
+      const choiceRow = document.createElement("div");
+      choiceRow.classList.add("modal-choice-row");
+
+      // Edit Expiration
+      const btnEdit = document.createElement("button");
+      btnEdit.type = "button";
+      btnEdit.classList.add("modal-option-button");
+      btnEdit.textContent = "Edit Expiration";
+      choiceRow.appendChild(btnEdit);
+
+      // Remove Item
+      const btnRemove = document.createElement("button");
+      btnRemove.type = "button";
+      btnRemove.classList.add("modal-remove-button");
+      btnRemove.textContent = "Remove Item";
+      choiceRow.appendChild(btnRemove);
+
+      modalBox.appendChild(choiceRow);
+
+      // Edit Expiration
+      const editSection = document.createElement("div");
+      editSection.classList.add("edit-exp-section");
+      editSection.style.display = "none";
+
+      // Expiration Date
+      const expLabel = document.createElement("label");
+      expLabel.setAttribute("for", "edit-exp");
+      expLabel.classList.add("modal-label");
+      expLabel.textContent = "Expiration Date";
+      editSection.appendChild(expLabel);
+
+
+      const expInput = document.createElement("input");
+      expInput.type = "date";
+      expInput.id = "edit-exp";
+      expInput.classList.add("modal-date-input");
+      if (meta.expiration && /^\d{4}-\d{2}-\d{2}$/.test(meta.expiration)) {
+        expInput.value = meta.expiration;
+      } else {
+        const entryDate = new Date(meta.date_into_fridge);
+        const shelf = get_expected_expiration(name) || 0;
+        entryDate.setDate(entryDate.getDate() + shelf);
+        expInput.value = entryDate.toISOString().split("T")[0];
+      }
+      editSection.appendChild(expInput);
+
+
+      const adjustRow = document.createElement("div");
+      adjustRow.classList.add("exp-adjust-row");
+
+      function makeButton(label, delta) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.classList.add("exp-button");
+        btn.textContent = label;
+        btn.addEventListener("click", () => {
+          let d = new Date(expInput.value);
+          if (isNaN(d)) d = new Date();
+          d.setDate(d.getDate() + delta);
+          expInput.value = d.toISOString().split("T")[0];
+        });
+        return btn;
+      }
+
+      adjustRow.appendChild(makeButton("−1 Week", -7));
+      adjustRow.appendChild(makeButton("−1 Day", -1));
+      adjustRow.appendChild(makeButton("+1 Day", +1));
+      adjustRow.appendChild(makeButton("+1 Week", +7));
+      editSection.appendChild(adjustRow);
+
+      // Save / Cancel row
+      const actionRow = document.createElement("div");
+      actionRow.classList.add("modal-action-row");
+
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.classList.add("modal-save-button");
+      saveBtn.textContent = "Save";
+      saveBtn.addEventListener("click", () => {
+        const sel = new Date(expInput.value);
+        if (isNaN(sel)) {
+          alert("Enter a valid expiration date");
+          return;
+        }
+        const newExpISO = sel.toISOString().split("T")[0];
+        fetch(
+          `/update-fridge-items/${encodeURIComponent(
+            name
+          )}/${newExpISO}/${meta.date_into_fridge}`,
+          { method: "POST" }
+        )
+          .then((res) => {
+            if (!res.ok) {
+              return res.text().then((txt) => {
+                throw new Error(txt);
+              });
+            }
+            return res.json();
+          })
+          .then(() => {
+            document.body.removeChild(overlay);
+            load_fromFridge();
+          })
+          .catch((err) => {
+            alert("Update failed: " + err.message);
+          });
+      });
+      actionRow.appendChild(saveBtn);
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.classList.add("modal-cancel-button");
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.addEventListener("click", () => {
+        document.body.removeChild(overlay);
+      });
+      actionRow.appendChild(cancelBtn);
+
+      editSection.appendChild(actionRow);
+      modalBox.appendChild(editSection);
+
+      btnEdit.addEventListener("click", () => {
+        choiceRow.style.display = "none";
+        editSection.style.display = "block";
+      });
+
+      btnRemove.addEventListener("click", () => {
+        removeItemFromFridge(name, meta.date_into_fridge);
+        document.body.removeChild(overlay);
+      });
+
+
+      overlay.appendChild(modalBox);
       document.body.appendChild(overlay);
     });
-  }
+  });
 }
+
 
 function renderExpiredPanels() {
   if (!expiredPanel) return;
@@ -381,25 +429,25 @@ function renderExpiredPanels() {
   }
 
   if (!hasExpired && !hasSoon) {
-    // No items at all → one panel, title “Expired”, and maybe a placeholder
+
     expiredNowSection.style.display = "";
     expiredSoonSection.style.display = "none";
     expiredNowSection.querySelector("h2").textContent = "Expired";
     expiredNowGrid.innerHTML = `<div class="empty"></div>`;
   } else if (hasExpired && !hasSoon) {
-    // Only expired‐now items
+    //  expired‐now items
     expiredNowSection.style.display = "";
     expiredSoonSection.style.display = "none";
     expiredNowSection.querySelector("h2").textContent = "Expired Now";
   } else if (!hasExpired && hasSoon) {
-    // Only next‐week items
+    //  next‐week items
     expiredNowSection.style.display = "";
     expiredSoonSection.style.display = "none";
     expiredNowSection.querySelector("h2").textContent = "Expires Next Week";
-    // move the “soon” cards into the first grid
+
     expiredNowGrid.innerHTML = expiredSoonGrid.innerHTML;
   } else {
-    // Both categories present
+
     expiredNowSection.style.display = "";
     expiredSoonSection.style.display = "";
     expiredNowSection.querySelector("h2").textContent = "Expired Now";
@@ -505,7 +553,7 @@ function add_toFridge(item_name, barcode, days, img_src) {
     });
 
   load_fromFridge();
-  alert(`${item_name} added to fridge (${current_fridge[item_name].quantity})`);
+  //alert(`${item_name} added to fridge (${current_fridge[item_name].quantity})`);
 }
 
 // existing expiration checker
@@ -518,91 +566,91 @@ function get_expected_expiration(item_name) {
   return -1; // not found
 }
 
-// your lookup + scan button
-lookupButton.addEventListener("click", () => {
-  const barcode = inputbarcode.value.trim();
-  if (!barcode) {
-    alert("Enter a barcode");
-    return;
-  }
-  let data = apiresponse2; // #TODO: replace with actual API call
-  if (lookupButton) {
-    lookupButton.addEventListener("click", () => {
-      const barcode = inputbarcode.value.trim();
-      if (!barcode) {
-        alert("Enter a barcode");
-        return;
-      }
-      // #TODO: replace with actual API call
+// // your lookup + scan button
+// lookupButton.addEventListener("click", () => {
+//   const barcode = inputbarcode.value.trim();
+//   if (!barcode) {
+//     alert("Enter a barcode");
+//     return;
+//   }
+//   let data = apiresponse; // #TODO: replace with actual API call
+//   if (lookupButton) {
+//     lookupButton.addEventListener("click", () => {
+//       const barcode = inputbarcode.value.trim();
+//       if (!barcode) {
+//         alert("Enter a barcode");
+//         return;
+//       }
+//       // #TODO: replace with actual API call
 
-      let product = data.products[0];
-      let title = product.title;
-      let desc = product.description || "";
-      let img = product.images[0] || "";
+//       let product = data.products[0];
+//       let title = product.title;
+//       let desc = product.description || "";
+//       let img = product.images[0] || "";
 
-      productName.textContent = title;
-      productDescription.textContent = desc;
-      productImage.src = img;
+//       productName.textContent = title;
+//       productDescription.textContent = desc;
+//       productImage.src = img;
 
-      // Example logic to match expiration table
-      let matched = false;
-      for (let item in expiration_table) {
-        if (title.toLowerCase().includes(item.toLowerCase())) {
-          matched = true;
+//       // Example logic to match expiration table
+//       let matched = false;
+//       for (let item in expiration_table) {
+//         if (title.toLowerCase().includes(item.toLowerCase())) {
+//           matched = true;
 
-          add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
-          get_expected_expiration(item);
-          break;
-        }
-      }
+//           add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
+//           get_expected_expiration(item);
+//           break;
+//         }
+//       }
 
-      if (!matched) {
-        add_toFridge(title, barcode, null, img);
-        alert("Item added to fridge with no expiration date: " + title);
-      }
+//       if (!matched) {
+//         add_toFridge(title, barcode, null, img);
+//         alert("Item added to fridge with no expiration date: " + title);
+//       }
 
-      // const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
-      // #TODO
-      // fetch(apiUrl)
-      //   .then((response) => {
-      //     if (!response.ok) {
-      //       throw new Error(`Error ${response.status}: ${response.statusText}`);
-      //     }
-      //     return response.json();
-      //   })
-      //   .then((data) => {
-      //     const product = data.products[0];
-      //     const title = product.title;
-      //     const desc = product.description || "";
-      //     const img = product.images[0] || "";
+//       // const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
+//       // #TODO
+//       // fetch(apiUrl)
+//       //   .then((response) => {
+//       //     if (!response.ok) {
+//       //       throw new Error(`Error ${response.status}: ${response.statusText}`);
+//       //     }
+//       //     return response.json();
+//       //   })
+//       //   .then((data) => {
+//       //     const product = data.products[0];
+//       //     const title = product.title;
+//       //     const desc = product.description || "";
+//       //     const img = product.images[0] || "";
 
-      //     productName.textContent = title;
-      //     productDescription.textContent = desc;
-      //     productImage.src = img;
+//       //     productName.textContent = title;
+//       //     productDescription.textContent = desc;
+//       //     productImage.src = img;
 
-      //     // Example logic to match expiration table
-      //     let matched = false;
-      //     console.log(1);
-      //     for (let item in expiration_table) {
-      //       if (title.toLowerCase().includes(item.toLowerCase())) {
-      //         matched = true;
-      //         console.log("Matched:", item);
-      //         add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
-      //         get_expected_expiration(item);
-      //         console.log(2);
-      //         break;
-      //       }
-      //     }
-      //     console.log(3);
-      //     if (!matched) {
-      //       console.log(4);
-      //       add_toFridge(title, barcode, null);
-      //       alert("Item added to fridge with no expiration date: " + title);
-      //     }
-      //   });
-    });
-  }
-});
+//       //     // Example logic to match expiration table
+//       //     let matched = false;
+//       //     console.log(1);
+//       //     for (let item in expiration_table) {
+//       //       if (title.toLowerCase().includes(item.toLowerCase())) {
+//       //         matched = true;
+//       //         console.log("Matched:", item);
+//       //         add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
+//       //         get_expected_expiration(item);
+//       //         console.log(2);
+//       //         break;
+//       //       }
+//       //     }
+//       //     console.log(3);
+//       //     if (!matched) {
+//       //       console.log(4);
+//       //       add_toFridge(title, barcode, null);
+//       //       alert("Item added to fridge with no expiration date: " + title);
+//       //     }
+//       //   });
+//     });
+//   }
+// });
 
 function removeItemFromFridge(itemName, entryDate) {
   if (!current_fridge[itemName]) {
@@ -667,4 +715,354 @@ if (searchInput) {
   searchInput.addEventListener("input", (e) => renderFridge(e.target.value));
 }
 
+function createModal() {
+  
+  const overlay = document.createElement("div");
+  overlay.classList.add("modal-overlay");
+  overlay.id = "generic-modal"; 
+  
+  const modalBox = document.createElement("div");
+  modalBox.classList.add("modal-content");
+  modalBox.style.position = "relative"; 
+  modalBox.innerHTML = "&times;";
+  modalBox.style.right = "1rem";
+  modalBox.style.top = "1rem";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.classList.add("modal-close");
+  closeBtn.innerHTML = "&times;"; 
+
+  
+  closeBtn.addEventListener("click", () => {
+    document.body.removeChild(overlay);
+  });
+
+  modalBox.appendChild(closeBtn);
+  overlay.appendChild(modalBox);
+  
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+
+  return modalBox;
+}
+
+
+function showCustomItemOverlay() {
+  const modalBox = createModal();
+
+  const titleH2 = document.createElement("h2");
+  titleH2.className = "text-xl font-semibold text-gray-900";
+  titleH2.textContent = "Add Custom Item";
+  modalBox.appendChild(titleH2);
+
+
+  const catContainer = document.createElement("div");
+  catContainer.style.display = "flex";
+  catContainer.style.flexDirection = "row";
+  catContainer.style.justifyContent = "space-between";
+  catContainer.style.alignItems = "center";
+  catContainer.style.marginTop = "1rem";
+  catContainer.style.gap = "0.75rem";
+
+  // Helper to create one category card
+  function makeCategoryCard(label, imgUrl) {
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+    wrapper.style.alignItems = "center";
+    wrapper.style.cursor = "pointer";
+
+    const img = document.createElement("img");
+    img.src = imgUrl;
+    img.alt = label;
+    img.style.width  = "100px";
+    img.style.height = "100px";
+    img.className = "object-cover rounded-md border border-gray-300";
+    
+    const caption = document.createElement("span");
+    caption.textContent = label;
+    caption.style.marginTop = "0.5rem";     
+    caption.style.fontSize = "0.875rem";   
+    caption.style.fontWeight = "500";    
+    caption.style.color = "#4b5563"; 
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(caption);
+
+    return { wrapper, label, imgElement: img};
+  }
+
+  // Produce fruit.png
+  const { wrapper: produceCard, label: produceLabel } =
+    makeCategoryCard("Produce", "/public/static/fruit.png");
+  catContainer.appendChild(produceCard);
+
+  // Meat steak.png
+  const { wrapper: meatCard, label: meatLabel } =
+    makeCategoryCard("Meat", "/public/static/steak.png");
+  catContainer.appendChild(meatCard);
+
+  // Takeout  takeout.jpg
+  const { wrapper: takeoutCard, label: takeoutLabel } =
+    makeCategoryCard("Takeout", "/public/static/takeout.jpg");
+  catContainer.appendChild(takeoutCard);
+
+  modalBox.appendChild(catContainer);
+
+  // Item Name input (optional)
+  const nameLabel = document.createElement("label");
+  nameLabel.setAttribute("for", "custom-name");
+  nameLabel.className = "block mt-6 text-sm font-medium text-gray-700";
+  nameLabel.textContent = "Item Name (or tap a photo)";
+  modalBox.appendChild(nameLabel);
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.id = "custom-name";
+  nameInput.className = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
+  nameInput.placeholder = "Optional";
+  modalBox.appendChild(nameInput);
+
+  function selectCategory(labelText, cardElement) {
+
+    [produceCard, meatCard, takeoutCard].forEach((c) => {
+      c.firstChild.classList.remove("ring-2", "ring-emerald-500");
+    });
+
+    cardElement.firstChild.classList.add("ring-2", "ring-emerald-500");
+
+    nameInput.value = labelText;
+  }
+
+  produceCard.addEventListener("click", () => selectCategory(produceLabel, produceCard));
+  meatCard.addEventListener("click", () => selectCategory(meatLabel, meatCard));
+  takeoutCard.addEventListener("click", () => selectCategory(takeoutLabel, takeoutCard));
+
+
+  /*
+  const imageLabel = document.createElement("label");
+  imageLabel.setAttribute("for", "custom-image");
+  imageLabel.className = "block mt-6 text-sm font-medium text-gray-700";
+  imageLabel.textContent = "Custom Image (optional)";
+  modalBox.appendChild(imageLabel);
+
+  const imageInput = document.createElement("input");
+  imageInput.type = "file";
+  imageInput.id = "custom-image";
+  imageInput.accept = "image/*";
+  imageInput.className = "mt-1 block w-full text-gray-900";
+  modalBox.appendChild(imageInput);
+  */
+
+  // Expiration date
+  const expLabel = document.createElement("label");
+  expLabel.setAttribute("for", "custom-exp");
+  expLabel.className = "block mt-6 text-sm font-medium text-gray-700";
+  expLabel.textContent = "Expiration Date";
+  modalBox.appendChild(expLabel);
+
+  const expInput = document.createElement("input");
+  expInput.type = "date";
+  expInput.id = "custom-exp";
+  expInput.className = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
+  modalBox.appendChild(expInput);
+
+  const today = new Date();
+  expInput.value = today.toISOString().split("T")[0];
+
+
+  const adjustRow = document.createElement("div");
+  adjustRow.className = "exp-adjust-row mt-4 flex gap-2";
+
+  const btnDecWeek = document.createElement("button");
+  btnDecWeek.type = "button";
+  btnDecWeek.className = "exp-button";
+  btnDecWeek.textContent = "−1 Week";
+  adjustRow.appendChild(btnDecWeek);
+
+  const btnDecDay = document.createElement("button");
+  btnDecDay.type = "button";
+  btnDecDay.className = "exp-button";
+  btnDecDay.textContent = "−1 Day";
+  adjustRow.appendChild(btnDecDay);
+
+  const btnIncDay = document.createElement("button");
+  btnIncDay.type = "button";
+  btnIncDay.className = "exp-button";
+  btnIncDay.textContent = "+1 Day";
+  adjustRow.appendChild(btnIncDay);
+
+  const btnIncWeek = document.createElement("button");
+  btnIncWeek.type = "button";
+  btnIncWeek.className = "exp-button";
+  btnIncWeek.textContent = "+1 Week";
+  adjustRow.appendChild(btnIncWeek);
+
+  modalBox.appendChild(adjustRow);
+
+  // Wire up date adjustments
+  function adjustExpiration(deltaDays) {
+    let d = new Date(expInput.value);
+    if (isNaN(d)) d = new Date();
+    d.setDate(d.getDate() + deltaDays);
+    expInput.value = d.toISOString().split("T")[0];
+  }
+  btnDecWeek.addEventListener("click", () => adjustExpiration(-7));
+  btnDecDay.addEventListener("click", () => adjustExpiration(-1));
+  btnIncDay.addEventListener("click", () => adjustExpiration(+1));
+  btnIncWeek.addEventListener("click", () => adjustExpiration(+7));
+
+  nameInput.addEventListener("input", () => {
+    [produceCard, meatCard, takeoutCard].forEach((c) => {
+      c.firstChild.classList.remove("ring-2", "ring-emerald-500");
+    });
+  });
+
+  // Save Item button
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.textContent = "Save Item";
+  saveBtn.style.marginTop = "1.5rem";              
+  saveBtn.style.width = "100%";
+  saveBtn.style.padding = "0.75rem 1rem";         
+  saveBtn.style.backgroundColor = "#10b981";    
+  saveBtn.style.color = "#ffffff";
+  saveBtn.style.fontSize = "1rem";                
+  saveBtn.style.fontWeight = "600";                
+  saveBtn.style.border = "none";
+  saveBtn.style.borderRadius = "0.375rem";     
+  saveBtn.style.cursor = "pointer";
+  saveBtn.addEventListener("mouseenter", () => {
+    saveBtn.style.backgroundColor = "#059669";      
+  });
+  saveBtn.addEventListener("mouseleave", () => {
+    saveBtn.style.backgroundColor = "#10b981";
+  });
+
+  modalBox.appendChild(saveBtn);
+
+  saveBtn.addEventListener("click", async () => {
+    // Determine final item name: if nameInput empty, default to “Custom Item”
+    let finalName = nameInput.value.trim();
+    if (!finalName) finalName = "Custom Item";
+
+    const sel = new Date(expInput.value);
+    let daysUntilExp = null;
+    if (!isNaN(sel)) {
+      const diffMs = sel.getTime() - new Date().getTime();
+      daysUntilExp = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+
+    const imgData = "";
+
+    add_toFridge(finalName, "", daysUntilExp, imgData);
+
+    // Close overlay
+    const overlay = document.getElementById("generic-modal");
+    if (overlay) overlay.remove();
+  });
+}
+
+
+function showScanOverlay() {
+
+  const modalBox = createModal();
+
+
+  const titleH2 = document.createElement("h2");
+  titleH2.className = "text-xl font-semibold text-gray-900";
+  titleH2.textContent = "Scan & Add";
+  modalBox.appendChild(titleH2);
+
+
+  const barcodeLabel = document.createElement("label");
+  barcodeLabel.setAttribute("for", "scan-barcode");
+  barcodeLabel.className = "block mt-4 text-sm font-medium text-gray-700";
+  barcodeLabel.textContent = "Barcode";
+  modalBox.appendChild(barcodeLabel);
+
+
+  const barcodeInput = document.createElement("input");
+  barcodeInput.type = "text";
+  barcodeInput.id = "scan-barcode";
+  barcodeInput.className = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
+  barcodeInput.placeholder = "e.g. 021130240302";
+  modalBox.appendChild(barcodeInput);
+  barcodeInput.focus();
+
+
+  const lookupBtn = document.createElement("button");
+  lookupBtn.type = "button";
+  lookupBtn.id = "scan-lookup-btn";
+  lookupBtn.className =
+    "mt-6 w-full py-2 bg-emerald-500 text-white font-semibold rounded-md hover:bg-emerald-600";
+  lookupBtn.textContent = "Lookup & Add";
+  modalBox.appendChild(lookupBtn);
+
+
+  const resultDiv = document.createElement("div");
+  resultDiv.className = "mt-4";
+  modalBox.appendChild(resultDiv);
+
+
+  function runLookup() {
+    const code = barcodeInput.value.trim();
+    if (!code) {
+      alert("Enter a barcode");
+      return;
+    }
+
+
+    let data = apiresponse; // #TODO: replace with actual API call
+
+    const product = data.products[0];
+    const title = product.title;
+    const desc = product.description || "";
+    const img = product.images[0] || "";
+
+
+    resultDiv.innerHTML = `
+      <div class="lookup-result flex items-start gap-4 mt-2">
+        <img id="popupProductImage" src="${img}" alt="${title}"
+             class="w-16 h-16 object-cover border border-gray-200 rounded-md" />
+        <div class="lookup-info">
+          <h3 id="popupProductName" class="text-lg font-medium text-gray-900">${title}</h3>
+          <p id="popupProductDescription" class="text-sm text-gray-600">${desc}</p>
+        </div>
+      </div>
+    `;
+
+
+    let matched = false;
+    for (let item in expiration_table) {
+      if (title.toLowerCase().includes(item.toLowerCase())) {
+        matched = true;
+        add_toFridge(title, code, expiration_table[item], img);
+        break;
+      }
+    }
+
+    if (!matched) {
+      add_toFridge(title, code, null, img);
+      alert("Item added to fridge with no expiration date: " + title);
+    }
+  }
+
+  lookupBtn.addEventListener("click", runLookup);
+  barcodeInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runLookup();
+    }
+  });
+}
+
+
 export { load_fromFridge, renderFridge, current_fridge };
+

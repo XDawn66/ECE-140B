@@ -34,7 +34,7 @@
 
     <main class="dashboard">
       <!-- LOOKUP + ADD SECTION -->
-      <section class="panel lookup-panel">
+      <!-- <section class="panel lookup-panel">
         <h1>Scan &amp; Add</h1>
         <div class="controls">
           <input
@@ -51,7 +51,7 @@
             <p id="productDescription"></p>
           </div>
         </div>
-      </section>
+      </section> -->
 
       <!-- FRIDGE PANEL -->
       <section class="panel fridge-panel">
@@ -77,6 +77,22 @@
           <div id="expired-soon" class="grid"></div>
         </div>
       </section>
+
+
+      <div class="fab-container">
+       
+        <button id="fab-main" class="fab-button">
+          +
+        </button>
+        
+
+        <!-- Two hidden options: “Custom” and “Scan” -->
+        <div id="fab-options" class="fab-options hidden">
+          <button id="fab-custom" class="fab-option">Custom</button>
+          <button id="fab-scan" class="fab-option">Scan</button>
+        </div>
+      </div>
+
     </main>
   </body>
 </html>
