@@ -92,7 +92,12 @@ a {
   padding-bottom: 0.5rem;
 }
 .fridge-panel {
-  max-width: 35%;
+  flex: 1;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 .fridge-panel h1 {
   font-size: 1.5rem;
@@ -102,11 +107,12 @@ a {
   padding-bottom: 0.5rem;
 }
 .expired-panel {
-  max-width: 35%;
-  background-color: #ffffff;
+  flex: 1;  
+  background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 0;
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 .expired-panel h1 {
   font-size: 1.5rem;
@@ -530,6 +536,17 @@ a {
 
 .exp-cancel:hover {
   background-color: #dc2626;  /* red-600 */
+}
+.modal-choice-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;         /* adjust spacing between buttons */
+  width: 100%;
+  margin-top: 1rem;     /* give some breathing room under the title/image */
+}
+.modal-choice-row .modal-option-button,
+.modal-choice-row .modal-remove-button {
+  width: 100%;
 }
 
 /* -------------- Overlay -------------- */

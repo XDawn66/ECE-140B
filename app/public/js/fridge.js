@@ -724,9 +724,7 @@ function createModal() {
   const modalBox = document.createElement("div");
   modalBox.classList.add("modal-content");
   modalBox.style.position = "relative"; 
-  modalBox.innerHTML = "&times;";
-  modalBox.style.right = "1rem";
-  modalBox.style.top = "1rem";
+
 
   const closeBtn = document.createElement("button");
   closeBtn.classList.add("modal-close");
@@ -759,62 +757,63 @@ function showCustomItemOverlay() {
   titleH2.className = "text-xl font-semibold text-gray-900";
   titleH2.textContent = "Add Custom Item";
   modalBox.appendChild(titleH2);
-
-
+ 
   const catContainer = document.createElement("div");
-  catContainer.style.display = "flex";
+  catContainer.style.display       = "flex";
   catContainer.style.flexDirection = "row";
   catContainer.style.justifyContent = "space-between";
-  catContainer.style.alignItems = "center";
-  catContainer.style.marginTop = "1rem";
-  catContainer.style.gap = "0.75rem";
+  catContainer.style.alignItems    = "center";
+  catContainer.style.marginTop     = "1rem";
+  catContainer.style.gap           = "0.75rem";
 
-  // Helper to create one category card
+
+  let selectedImgUrl = "";
+
   function makeCategoryCard(label, imgUrl) {
     const wrapper = document.createElement("div");
-    wrapper.style.display = "flex";
+    wrapper.style.display       = "flex";
     wrapper.style.flexDirection = "column";
-    wrapper.style.alignItems = "center";
-    wrapper.style.cursor = "pointer";
+    wrapper.style.alignItems    = "center";
+    wrapper.style.cursor        = "pointer";
 
     const img = document.createElement("img");
-    img.src = imgUrl;
-    img.alt = label;
-    img.style.width  = "100px";
-    img.style.height = "100px";
-    img.className = "object-cover rounded-md border border-gray-300";
-    
+    img.src           = imgUrl;
+    img.alt           = label;
+    img.style.width   = "100px";
+    img.style.height  = "100px";
+    img.className     = "object-cover rounded-md border border-gray-300";
+
     const caption = document.createElement("span");
-    caption.textContent = label;
-    caption.style.marginTop = "0.5rem";     
-    caption.style.fontSize = "0.875rem";   
-    caption.style.fontWeight = "500";    
-    caption.style.color = "#4b5563"; 
+    caption.textContent   = label;
+    caption.style.marginTop  = "0.5rem";
+    caption.style.fontSize   = "0.875rem";
+    caption.style.fontWeight = "500";
+    caption.style.color      = "#4b5563";
 
     wrapper.appendChild(img);
     wrapper.appendChild(caption);
 
-    return { wrapper, label, imgElement: img};
+    return { wrapper, label, url: imgUrl }; // return imgUrl so we know which URL to save
   }
 
-  // Produce fruit.png
-  const { wrapper: produceCard, label: produceLabel } =
+  // Produce 
+  const { wrapper: produceCard, label: produceLabel, url: produceUrl } =
     makeCategoryCard("Produce", "/public/static/fruit.png");
   catContainer.appendChild(produceCard);
 
-  // Meat steak.png
-  const { wrapper: meatCard, label: meatLabel } =
+  // Meat
+  const { wrapper: meatCard, label: meatLabel, url: meatUrl } =
     makeCategoryCard("Meat", "/public/static/steak.png");
   catContainer.appendChild(meatCard);
 
-  // Takeout  takeout.jpg
-  const { wrapper: takeoutCard, label: takeoutLabel } =
+  // Takeout 
+  const { wrapper: takeoutCard, label: takeoutLabel, url: takeoutUrl } =
     makeCategoryCard("Takeout", "/public/static/takeout.jpg");
   catContainer.appendChild(takeoutCard);
 
   modalBox.appendChild(catContainer);
 
-  // Item Name input (optional)
+  // Item Name optional
   const nameLabel = document.createElement("label");
   nameLabel.setAttribute("for", "custom-name");
   nameLabel.className = "block mt-6 text-sm font-medium text-gray-700";
@@ -822,44 +821,32 @@ function showCustomItemOverlay() {
   modalBox.appendChild(nameLabel);
 
   const nameInput = document.createElement("input");
-  nameInput.type = "text";
-  nameInput.id = "custom-name";
-  nameInput.className = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
+  nameInput.type        = "text";
+  nameInput.id          = "custom-name";
+  nameInput.className   = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
   nameInput.placeholder = "Optional";
   modalBox.appendChild(nameInput);
 
-  function selectCategory(labelText, cardElement) {
-
+  function selectCategory(labelText, cardElement, imgUrl) {
     [produceCard, meatCard, takeoutCard].forEach((c) => {
-      c.firstChild.classList.remove("ring-2", "ring-emerald-500");
+      c.querySelector("img").classList.remove("ring-2", "ring-emerald-500");
     });
-
-    cardElement.firstChild.classList.add("ring-2", "ring-emerald-500");
-
+    cardElement.querySelector("img").classList.add("ring-2", "ring-emerald-500");
     nameInput.value = labelText;
+    selectedImgUrl = imgUrl;
   }
 
-  produceCard.addEventListener("click", () => selectCategory(produceLabel, produceCard));
-  meatCard.addEventListener("click", () => selectCategory(meatLabel, meatCard));
-  takeoutCard.addEventListener("click", () => selectCategory(takeoutLabel, takeoutCard));
+  produceCard.addEventListener("click", () =>
+    selectCategory(produceLabel, produceCard, produceUrl) // ← HERE
+  );
+  meatCard.addEventListener("click", () =>
+    selectCategory(meatLabel, meatCard, meatUrl) // ← HERE
+  );
+  takeoutCard.addEventListener("click", () =>
+    selectCategory(takeoutLabel, takeoutCard, takeoutUrl) // ← HERE
+  );
 
 
-  /*
-  const imageLabel = document.createElement("label");
-  imageLabel.setAttribute("for", "custom-image");
-  imageLabel.className = "block mt-6 text-sm font-medium text-gray-700";
-  imageLabel.textContent = "Custom Image (optional)";
-  modalBox.appendChild(imageLabel);
-
-  const imageInput = document.createElement("input");
-  imageInput.type = "file";
-  imageInput.id = "custom-image";
-  imageInput.accept = "image/*";
-  imageInput.className = "mt-1 block w-full text-gray-900";
-  modalBox.appendChild(imageInput);
-  */
-
-  // Expiration date
   const expLabel = document.createElement("label");
   expLabel.setAttribute("for", "custom-exp");
   expLabel.className = "block mt-6 text-sm font-medium text-gray-700";
@@ -867,78 +854,60 @@ function showCustomItemOverlay() {
   modalBox.appendChild(expLabel);
 
   const expInput = document.createElement("input");
-  expInput.type = "date";
-  expInput.id = "custom-exp";
-  expInput.className = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
-  modalBox.appendChild(expInput);
-
+  expInput.type        = "date";
+  expInput.id          = "custom-exp";
+  expInput.className   = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
   const today = new Date();
   expInput.value = today.toISOString().split("T")[0];
-
+  modalBox.appendChild(expInput);
 
   const adjustRow = document.createElement("div");
   adjustRow.className = "exp-adjust-row mt-4 flex gap-2";
 
-  const btnDecWeek = document.createElement("button");
-  btnDecWeek.type = "button";
-  btnDecWeek.className = "exp-button";
-  btnDecWeek.textContent = "−1 Week";
-  adjustRow.appendChild(btnDecWeek);
-
-  const btnDecDay = document.createElement("button");
-  btnDecDay.type = "button";
-  btnDecDay.className = "exp-button";
-  btnDecDay.textContent = "−1 Day";
-  adjustRow.appendChild(btnDecDay);
-
-  const btnIncDay = document.createElement("button");
-  btnIncDay.type = "button";
-  btnIncDay.className = "exp-button";
-  btnIncDay.textContent = "+1 Day";
-  adjustRow.appendChild(btnIncDay);
-
-  const btnIncWeek = document.createElement("button");
-  btnIncWeek.type = "button";
-  btnIncWeek.className = "exp-button";
-  btnIncWeek.textContent = "+1 Week";
-  adjustRow.appendChild(btnIncWeek);
-
-  modalBox.appendChild(adjustRow);
-
-  // Wire up date adjustments
-  function adjustExpiration(deltaDays) {
-    let d = new Date(expInput.value);
-    if (isNaN(d)) d = new Date();
-    d.setDate(d.getDate() + deltaDays);
-    expInput.value = d.toISOString().split("T")[0];
+  function makeButton(label, delta) {
+    const btn = document.createElement("button");
+    btn.type       = "button";
+    btn.classList.add("exp-button");
+    btn.textContent = label;
+    btn.addEventListener("click", () => {
+      let d = new Date(expInput.value);
+      if (isNaN(d)) d = new Date();
+      d.setDate(d.getDate() + delta);
+      expInput.value = d.toISOString().split("T")[0];
+    });
+    return btn;
   }
-  btnDecWeek.addEventListener("click", () => adjustExpiration(-7));
-  btnDecDay.addEventListener("click", () => adjustExpiration(-1));
-  btnIncDay.addEventListener("click", () => adjustExpiration(+1));
-  btnIncWeek.addEventListener("click", () => adjustExpiration(+7));
+
+  adjustRow.appendChild(makeButton("−1 Week", -7));
+  adjustRow.appendChild(makeButton("−1 Day", -1));
+  adjustRow.appendChild(makeButton("+1 Day", +1));
+  adjustRow.appendChild(makeButton("+1 Week", +7));
+  modalBox.appendChild(adjustRow);
 
   nameInput.addEventListener("input", () => {
     [produceCard, meatCard, takeoutCard].forEach((c) => {
-      c.firstChild.classList.remove("ring-2", "ring-emerald-500");
+      c.querySelector("img").classList.remove("ring-2", "ring-emerald-500");
     });
+    selectedImgUrl = ""; // no photo if they typed their own name
   });
 
-  // Save Item button
+
   const saveBtn = document.createElement("button");
-  saveBtn.type = "button";
-  saveBtn.textContent = "Save Item";
-  saveBtn.style.marginTop = "1.5rem";              
-  saveBtn.style.width = "100%";
-  saveBtn.style.padding = "0.75rem 1rem";         
-  saveBtn.style.backgroundColor = "#10b981";    
-  saveBtn.style.color = "#ffffff";
-  saveBtn.style.fontSize = "1rem";                
-  saveBtn.style.fontWeight = "600";                
-  saveBtn.style.border = "none";
-  saveBtn.style.borderRadius = "0.375rem";     
-  saveBtn.style.cursor = "pointer";
+  saveBtn.type             = "button";
+  saveBtn.textContent      = "Save Item";
+  saveBtn.style.marginTop  = "1.5rem";
+  saveBtn.style.width      = "100%";
+  saveBtn.style.padding    = "0.75rem 1rem";
+  saveBtn.style.backgroundColor = "#10b981";  
+  saveBtn.style.color           = "#ffffff";
+  saveBtn.style.fontSize        = "1rem";
+  saveBtn.style.fontWeight      = "600";
+  saveBtn.style.border          = "none";
+  saveBtn.style.borderRadius    = "0.375rem";
+  saveBtn.style.cursor          = "pointer";
+
   saveBtn.addEventListener("mouseenter", () => {
-    saveBtn.style.backgroundColor = "#059669";      
+    saveBtn.style.backgroundColor = "#059669";  
   });
   saveBtn.addEventListener("mouseleave", () => {
     saveBtn.style.backgroundColor = "#10b981";
@@ -947,21 +916,75 @@ function showCustomItemOverlay() {
   modalBox.appendChild(saveBtn);
 
   saveBtn.addEventListener("click", async () => {
-    // Determine final item name: if nameInput empty, default to “Custom Item”
-    let finalName = nameInput.value.trim();
-    if (!finalName) finalName = "Custom Item";
-
-    const sel = new Date(expInput.value);
+    let baseName = nameInput.value.trim();
+    if (!baseName) baseName = "Custom Item";
+    const newDateISO = expInput.value;
+    const sel = new Date(newDateISO);
     let daysUntilExp = null;
     if (!isNaN(sel)) {
       const diffMs = sel.getTime() - new Date().getTime();
       daysUntilExp = Math.round(diffMs / (1000 * 60 * 60 * 24));
     }
 
+    let foundKey = null;
+    Object.keys(current_fridge).forEach((existingKey) => {
+      if (
+        existingKey === baseName ||
+        existingKey.startsWith(baseName + " ")
+      ) {
+        const meta = current_fridge[existingKey];
+        let existingDateISO;
+        if (
+          typeof meta.expiration === "string" &&
+          /^\d{4}-\d{2}-\d{2}$/.test(meta.expiration)
+        ) {
+          existingDateISO = meta.expiration;
+        } else {
+          const entryDateObj = new Date(meta.date_into_fridge);
+          entryDateObj.setDate(entryDateObj.getDate() + meta.expiration);
+          existingDateISO = entryDateObj.toISOString().split("T")[0];
+        }
 
-    const imgData = "";
+        if (existingDateISO === newDateISO) {
+          foundKey = existingKey;
+        }
+      }
+    });
 
-    add_toFridge(finalName, "", daysUntilExp, imgData);
+    if (foundKey) {
+      add_toFridge(
+        foundKey,
+        "",
+        daysUntilExp,
+        current_fridge[foundKey].img_url || ""
+      );
+    } else {
+      let highestSuffix = 0;
+      Object.keys(current_fridge).forEach((existingKey) => {
+        if (
+          existingKey === baseName ||
+          existingKey.startsWith(baseName + " ")
+        ) {
+          if (existingKey === baseName) {
+            highestSuffix = Math.max(highestSuffix, 1);
+          } else {
+            const maybeNum = parseInt(
+              existingKey.slice(baseName.length + 1),
+              10
+            );
+            if (!isNaN(maybeNum)) {
+              highestSuffix = Math.max(highestSuffix, maybeNum);
+            }
+          }
+        }
+      });
+
+      const newSuffix =
+        highestSuffix === 0 ? "" : " " + (highestSuffix + 1);
+      const finalName = baseName + newSuffix;
+
+      add_toFridge(finalName, "", daysUntilExp, selectedImgUrl || "");
+    }
 
     // Close overlay
     const overlay = document.getElementById("generic-modal");
