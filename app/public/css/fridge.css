@@ -107,7 +107,7 @@ a {
   padding-bottom: 0.5rem;
 }
 .expired-panel {
-  flex: 1;  
+  flex: 1;
   background: #fff;
   border: 1px solid #e5e7eb;
   padding: 1rem;
@@ -133,20 +133,20 @@ a {
   border-radius: 0;
 }
 .expired-panel .subpanel:nth-of-type(1) h2 {
-  color: #111827;               /* white text */
+  color: #111827; /* white text */
   padding: 0.25rem 0.5rem;
   border-radius: 0;
 }
 .expired-panel .subpanel h2 {
-  font-size: 1.5rem;                   
-  color: #111827;                     
+  font-size: 1.5rem;
+  color: #111827;
   margin-bottom: 1rem;
-  border-bottom: 2px solid #10b981;   
+  border-bottom: 2px solid #10b981;
   padding-bottom: 0.5rem;
-  border-radius: 0;    
+  border-radius: 0;
 }
 .expired-panel .subpanel:nth-of-type(2) h2 {
-  color: #111827;             
+  color: #111827;
   padding: 0.25rem 0.5rem;
   border-radius: 0;
 }
@@ -159,23 +159,33 @@ a {
   overflow-y: auto;
 }
 .expired-panel .grid .item.expired {
-  background-color: #fe6a6a;  /* red */
-  border-color:  #fd1c1c;
+  background-color: #fe6a6a; /* red */
+  border-color: #fd1c1c;
 }
 
 .expired-panel .grid .item.soon {
-  background-color: #fef08a;  /* yellowish-green */
-  border-color:  #fde047;
+  background-color: #fef08a; /* yellowish-green */
+  border-color: #fde047;
+}
+
+.fridge-panel .grid .item.soon {
+  background-color: #fef08a; /* yellowish-green */
+  border-color: #fde047;
+}
+
+.fridge-panel .grid .item.expired {
+  background-color: #fe6a6a; /* red */
+  border-color: #fd1c1c;
 }
 
 .grid .item {
   position: relative;
-  padding-top: 100%;               /* maintain square aspect ratio */
+  padding-top: 100%; /* maintain square aspect ratio */
   background: #e2e3e5;
   border-radius: 0.25rem;
   display: flex;
-  align-items: center;             /* vertical centering */
-  justify-content: center;         /* horizontal centering */
+  align-items: center; /* vertical centering */
+  justify-content: center; /* horizontal centering */
   cursor: pointer;
 }
 
@@ -249,11 +259,11 @@ a {
 .item.expired {
   background-color: #10b981;
   border: 2px solid #059669;
-  color: #fff;  
+  color: #fff;
 }
 .item.soon {
   background-color: #10b981;
-  border: 2px solid #059669; 
+  border: 2px solid #059669;
 }
 .item.fresh {
   background-color: #10b981;
@@ -269,9 +279,9 @@ a {
   top: 0.25rem;
   left: 0.25rem;
   right: 0.25rem;
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 500;
-  color: #fff;
+  color: #000000;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -329,15 +339,15 @@ a {
    =========================== */
 .fab-container {
   position: fixed;
-  bottom: 1.5rem;    /* similar to your 24px (≈1.5rem) */
+  bottom: 1.5rem; /* similar to your 24px (≈1.5rem) */
   right: 1.5rem;
-  z-index: 1000;     /* on top of most content */
+  z-index: 1000; /* on top of most content */
 }
 
 .fab-button {
-  width: 3.5rem;             /* 56px */
+  width: 3.5rem; /* 56px */
   height: 3.5rem;
-  border-radius: 9999px;     /* fully circular */
+  border-radius: 9999px; /* fully circular */
   background-color: #10b981; /* your “emerald-500” (green) */
   border: none;
   color: #ffffff;
@@ -356,22 +366,22 @@ a {
 
 .fab-options {
   position: absolute;
-  bottom: 4.25rem;           /* 3.5rem (button) + 0.75rem gap */
+  bottom: 4.25rem; /* 3.5rem (button) + 0.75rem gap */
   right: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.75rem;              /* 12px between buttons */
+  gap: 0.75rem; /* 12px between buttons */
 }
 
 .fab-option {
-  width: 8rem;               /* 128px */
-  padding: 0.5rem 0.75rem;    /* 8px/12px */
+  width: 8rem; /* 128px */
+  padding: 0.5rem 0.75rem; /* 8px/12px */
   border: none;
-  border-radius: 0.375rem;   /* 6px, matching your panels */
+  border-radius: 0.375rem; /* 6px, matching your panels */
   background-color: #10b981;
   color: #ffffff;
-  font-size: 0.875rem;       /* 14px */
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -388,8 +398,6 @@ a {
   display: none !important;
 }
 
-
-
 /* ======================
    Overlay / Modal Styles
    ====================== */
@@ -405,7 +413,7 @@ a {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;           /* above everything else */
+  z-index: 2000; /* above everything else */
 }
 
 /* 2) White “card” in the center */
@@ -413,9 +421,9 @@ a {
   position: relative;
   background-color: #ffffff;
   border: 1px solid #e5e7eb; /* gray-200 border */
-  border-radius: 0.5rem;      /* 8px round corners */
-  padding: 1.5rem;            /* 24px */
-  max-width: 28rem;           /* 448px */
+  border-radius: 0.5rem; /* 8px round corners */
+  padding: 1.5rem; /* 24px */
+  max-width: 28rem; /* 448px */
   width: 90%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -423,26 +431,26 @@ a {
 /* 3) Close “×” button in top‐right corner */
 .modal-close {
   position: absolute;
-  top: 0.75rem;              /* 12px inset */
+  top: 0.75rem; /* 12px inset */
   right: 0.75rem;
   background: none;
   border: none;
-  font-size: 1.25rem;        /* 20px “×” */
+  font-size: 1.25rem; /* 20px “×” */
   line-height: 1;
-  color: #6b7280;            /* gray-500 */
+  color: #6b7280; /* gray-500 */
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .modal-close:hover {
-  color: #374151;            /* gray-700 on hover */
+  color: #374151; /* gray-700 on hover */
 }
 
 /* 4) Headings inside modal */
 .modal-content h2 {
-  font-size: 1.25rem;        /* 20px */
+  font-size: 1.25rem; /* 20px */
   font-weight: 600;
-  color: #111827;            /* gray-900 */
+  color: #111827; /* gray-900 */
   margin-bottom: 1rem;
   border-bottom: 2px solid #10b981;
   padding-bottom: 0.5rem;
@@ -451,47 +459,47 @@ a {
 /* 5) Form inputs inside modal */
 .modal-content label {
   display: block;
-  font-size: 0.875rem;       /* 14px */
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
-  color: #4b5563;            /* gray-600 */
-  margin-top: 0.75rem;       /* 12px */
-  margin-bottom: 0.25rem;    /* 4px */
+  color: #4b5563; /* gray-600 */
+  margin-top: 0.75rem; /* 12px */
+  margin-bottom: 0.25rem; /* 4px */
 }
 
 .modal-content input[type="text"],
 .modal-content input[type="date"],
 .modal-content input[type="file"] {
   width: 100%;
-  padding: 0.5rem 0.75rem;    /* 8px / 12px */
+  padding: 0.5rem 0.75rem; /* 8px / 12px */
   font-size: 0.875rem;
   border: 1px solid #d1d5db; /* gray-300 */
-  border-radius: 0.375rem;   /* 6px */
-  color: #1f2937;            /* gray-800 */
+  border-radius: 0.375rem; /* 6px */
+  color: #1f2937; /* gray-800 */
   background-color: #f9fafb; /* gray-50 */
   box-sizing: border-box;
 }
 
 .modal-content input[type="text"]::placeholder,
 .modal-content input[type="date"]::placeholder {
-  color: #9ca3af;            /* gray-400 */
+  color: #9ca3af; /* gray-400 */
 }
 
 /* 6) “±1 day / ±1 week” button row */
 .exp-adjust-row {
-  margin-top: 0.75rem;       /* 12px */
+  margin-top: 0.75rem; /* 12px */
   display: flex;
-  gap: 0.5rem;               /* 8px */
+  gap: 0.5rem; /* 8px */
 }
 
 .exp-button {
   flex: 1;
-  padding: 0.375rem 0.5rem;   /* 6px / 8px */
-  font-size: 0.75rem;         /* 12px */
+  padding: 0.375rem 0.5rem; /* 6px / 8px */
+  font-size: 0.75rem; /* 12px */
   font-weight: 500;
-  color: #4b5563;             /* gray-600 */
+  color: #4b5563; /* gray-600 */
   background-color: #e5e7eb; /* gray-200 */
   border: 1px solid #d1d5db; /* gray-300 */
-  border-radius: 0.375rem;    /* 6px */
+  border-radius: 0.375rem; /* 6px */
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
@@ -502,29 +510,29 @@ a {
 
 /* 7) “Save Item” / “Lookup & Add” buttons inside modal */
 .modal-content button[type="button"] {
-  margin-top: 1rem;            /* 16px */
+  margin-top: 1rem; /* 16px */
   width: 100%;
-  padding: 0.75rem 1rem;       /* 12px / 16px */
-  background-color: #10b981;   /* emerald-500 */
+  padding: 0.75rem 1rem; /* 12px / 16px */
+  background-color: #10b981; /* emerald-500 */
   color: #ffffff;
-  font-size: 1rem;             /* 16px */
+  font-size: 1rem; /* 16px */
   font-weight: 600;
   border: none;
-  border-radius: 0.375rem;     /* 6px */
+  border-radius: 0.375rem; /* 6px */
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .modal-content button[type="button"]:hover {
-  background-color: #059669;   /* emerald-600 */
+  background-color: #059669; /* emerald-600 */
 }
 
 /* 8) If you want a secondary “Cancel” button style inside modal */
 .exp-cancel {
-  margin-top: 0.5rem;         /* 8px space below primary button */
+  margin-top: 0.5rem; /* 8px space below primary button */
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #ef4444;  /* red-500 */
+  background-color: #ef4444; /* red-500 */
   color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
@@ -535,14 +543,14 @@ a {
 }
 
 .exp-cancel:hover {
-  background-color: #dc2626;  /* red-600 */
+  background-color: #dc2626; /* red-600 */
 }
 .modal-choice-row {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;         /* adjust spacing between buttons */
+  gap: 0.75rem; /* adjust spacing between buttons */
   width: 100%;
-  margin-top: 1rem;     /* give some breathing room under the title/image */
+  margin-top: 1rem; /* give some breathing room under the title/image */
 }
 .modal-choice-row .modal-option-button,
 .modal-choice-row .modal-remove-button {

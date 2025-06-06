@@ -11,9 +11,9 @@ const fridgeGrid = document.getElementById("fridge-grid");
 const expiredPanel = document.querySelector(".expired-panel");
 
 const fabMainButton = document.getElementById("fab-main");
-const fabOptionsDiv  = document.getElementById("fab-options");
-const fabCustomBtn   = document.getElementById("fab-custom");
-const fabScanBtn     = document.getElementById("fab-scan");
+const fabOptionsDiv = document.getElementById("fab-options");
+const fabCustomBtn = document.getElementById("fab-custom");
+const fabScanBtn = document.getElementById("fab-scan");
 
 fabMainButton.addEventListener("click", () => {
   fabOptionsDiv.classList.toggle("hidden");
@@ -36,7 +36,6 @@ if (expiredPanel) {
   expiredNowGrid = document.getElementById("expired-now");
   expiredSoonGrid = document.getElementById("expired-soon");
 }
-
 
 const searchInput =
   document.getElementById("search-input") ||
@@ -152,7 +151,6 @@ const expiration_table = {
 // starting state
 let current_fridge = {};
 
-
 function renderFridge(filter = "") {
   fridgeGrid.innerHTML = "";
   const today = new Date();
@@ -161,10 +159,8 @@ function renderFridge(filter = "") {
   Object.entries(current_fridge).forEach(([name, meta]) => {
     if (q && !name.toLowerCase().includes(q)) return;
 
-
     const div = document.createElement("div");
     div.classList.add("item");
-
 
     if (meta.expiration === null) {
       div.classList.add("no-expiration");
@@ -189,7 +185,6 @@ function renderFridge(filter = "") {
       }
     }
 
-
     const labelDiv = document.createElement("div");
     labelDiv.classList.add("label");
     labelDiv.textContent = `${name} (${meta.quantity})`;
@@ -210,11 +205,10 @@ function renderFridge(filter = "") {
         }
       });
 
-
       const modalBox = document.createElement("div");
       modalBox.classList.add("modal-content");
 
-      // Back arrow button 
+      // Back arrow button
       const backBtn = document.createElement("button");
       backBtn.classList.add("modal-close"); // reuse same styling as close “×”
       backBtn.innerHTML = "←";
@@ -226,7 +220,6 @@ function renderFridge(filter = "") {
         choiceRow.style.display = "flex";
       });
       modalBox.appendChild(backBtn);
-
 
       // Item image
       if (meta.img_url && meta.img_url !== "N/A") {
@@ -244,14 +237,13 @@ function renderFridge(filter = "") {
         modalBox.appendChild(imgEl);
       }
 
-
       const titleH2 = document.createElement("h2");
       titleH2.classList.add("modal-title");
       titleH2.textContent = name;
       titleH2.style.textAlign = "center";
-      titleH2.style.marginTop = meta.img_url && meta.img_url !== "N/A" ? "0.5rem" : "1rem";
+      titleH2.style.marginTop =
+        meta.img_url && meta.img_url !== "N/A" ? "0.5rem" : "1rem";
       modalBox.appendChild(titleH2);
-
 
       const choiceRow = document.createElement("div");
       choiceRow.classList.add("modal-choice-row");
@@ -284,7 +276,6 @@ function renderFridge(filter = "") {
       expLabel.textContent = "Expiration Date";
       editSection.appendChild(expLabel);
 
-
       const expInput = document.createElement("input");
       expInput.type = "date";
       expInput.id = "edit-exp";
@@ -298,7 +289,6 @@ function renderFridge(filter = "") {
         expInput.value = entryDate.toISOString().split("T")[0];
       }
       editSection.appendChild(expInput);
-
 
       const adjustRow = document.createElement("div");
       adjustRow.classList.add("exp-adjust-row");
@@ -339,9 +329,9 @@ function renderFridge(filter = "") {
         }
         const newExpISO = sel.toISOString().split("T")[0];
         fetch(
-          `/update-fridge-items/${encodeURIComponent(
-            name
-          )}/${newExpISO}/${meta.date_into_fridge}`,
+          `/update-fridge-items/${encodeURIComponent(name)}/${newExpISO}/${
+            meta.date_into_fridge
+          }`,
           { method: "POST" }
         )
           .then((res) => {
@@ -384,13 +374,11 @@ function renderFridge(filter = "") {
         document.body.removeChild(overlay);
       });
 
-
       overlay.appendChild(modalBox);
       document.body.appendChild(overlay);
     });
   });
 }
-
 
 function renderExpiredPanels() {
   if (!expiredPanel) return;
@@ -429,7 +417,6 @@ function renderExpiredPanels() {
   }
 
   if (!hasExpired && !hasSoon) {
-
     expiredNowSection.style.display = "";
     expiredSoonSection.style.display = "none";
     expiredNowSection.querySelector("h2").textContent = "Expired";
@@ -447,7 +434,6 @@ function renderExpiredPanels() {
 
     expiredNowGrid.innerHTML = expiredSoonGrid.innerHTML;
   } else {
-
     expiredNowSection.style.display = "";
     expiredSoonSection.style.display = "";
     expiredNowSection.querySelector("h2").textContent = "Expired Now";
@@ -566,92 +552,6 @@ function get_expected_expiration(item_name) {
   return -1; // not found
 }
 
-// // your lookup + scan button
-// lookupButton.addEventListener("click", () => {
-//   const barcode = inputbarcode.value.trim();
-//   if (!barcode) {
-//     alert("Enter a barcode");
-//     return;
-//   }
-//   let data = apiresponse; // #TODO: replace with actual API call
-//   if (lookupButton) {
-//     lookupButton.addEventListener("click", () => {
-//       const barcode = inputbarcode.value.trim();
-//       if (!barcode) {
-//         alert("Enter a barcode");
-//         return;
-//       }
-//       // #TODO: replace with actual API call
-
-//       let product = data.products[0];
-//       let title = product.title;
-//       let desc = product.description || "";
-//       let img = product.images[0] || "";
-
-//       productName.textContent = title;
-//       productDescription.textContent = desc;
-//       productImage.src = img;
-
-//       // Example logic to match expiration table
-//       let matched = false;
-//       for (let item in expiration_table) {
-//         if (title.toLowerCase().includes(item.toLowerCase())) {
-//           matched = true;
-
-//           add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
-//           get_expected_expiration(item);
-//           break;
-//         }
-//       }
-
-//       if (!matched) {
-//         add_toFridge(title, barcode, null, img);
-//         alert("Item added to fridge with no expiration date: " + title);
-//       }
-
-//       // const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
-//       // #TODO
-//       // fetch(apiUrl)
-//       //   .then((response) => {
-//       //     if (!response.ok) {
-//       //       throw new Error(`Error ${response.status}: ${response.statusText}`);
-//       //     }
-//       //     return response.json();
-//       //   })
-//       //   .then((data) => {
-//       //     const product = data.products[0];
-//       //     const title = product.title;
-//       //     const desc = product.description || "";
-//       //     const img = product.images[0] || "";
-
-//       //     productName.textContent = title;
-//       //     productDescription.textContent = desc;
-//       //     productImage.src = img;
-
-//       //     // Example logic to match expiration table
-//       //     let matched = false;
-//       //     console.log(1);
-//       //     for (let item in expiration_table) {
-//       //       if (title.toLowerCase().includes(item.toLowerCase())) {
-//       //         matched = true;
-//       //         console.log("Matched:", item);
-//       //         add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
-//       //         get_expected_expiration(item);
-//       //         console.log(2);
-//       //         break;
-//       //       }
-//       //     }
-//       //     console.log(3);
-//       //     if (!matched) {
-//       //       console.log(4);
-//       //       add_toFridge(title, barcode, null);
-//       //       alert("Item added to fridge with no expiration date: " + title);
-//       //     }
-//       //   });
-//     });
-//   }
-// });
-
 function removeItemFromFridge(itemName, entryDate) {
   if (!current_fridge[itemName]) {
     alert("Item not found in fridge: " + itemName);
@@ -693,17 +593,22 @@ function update_expiration(itemName, newDays, entry_date) {
 }
 
 function add_ToLowOnList(item_name, last_entry_date, img_src) {
-  fetch("/api/add_low_list", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      product_name: item_name,
-      last_entry_date: last_entry_date,
-      img_url: img_src || "N/A", // optional image URL
-    }),
-  });
+  let not_to_add = ["Meat", "Takeout", "Produce"];
+  if (item_name in not_to_add) {
+    return;
+  }
+  if (item_name)
+    fetch("/api/add_low_list", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        product_name: item_name,
+        last_entry_date: last_entry_date,
+        img_url: img_src || "N/A", // optional image URL
+      }),
+    });
 }
 
 if (searchInput) {
@@ -716,28 +621,25 @@ if (searchInput) {
 }
 
 function createModal() {
-  
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
-  overlay.id = "generic-modal"; 
-  
+  overlay.id = "generic-modal";
+
   const modalBox = document.createElement("div");
   modalBox.classList.add("modal-content");
-  modalBox.style.position = "relative"; 
-
+  modalBox.style.position = "relative";
 
   const closeBtn = document.createElement("button");
   closeBtn.classList.add("modal-close");
-  closeBtn.innerHTML = "&times;"; 
+  closeBtn.innerHTML = "&times;";
 
-  
   closeBtn.addEventListener("click", () => {
     document.body.removeChild(overlay);
   });
 
   modalBox.appendChild(closeBtn);
   overlay.appendChild(modalBox);
-  
+
   document.body.appendChild(overlay);
 
   overlay.addEventListener("click", (e) => {
@@ -749,7 +651,6 @@ function createModal() {
   return modalBox;
 }
 
-
 function showCustomItemOverlay() {
   const modalBox = createModal();
 
@@ -757,38 +658,37 @@ function showCustomItemOverlay() {
   titleH2.className = "text-xl font-semibold text-gray-900";
   titleH2.textContent = "Add Custom Item";
   modalBox.appendChild(titleH2);
- 
+
   const catContainer = document.createElement("div");
-  catContainer.style.display       = "flex";
+  catContainer.style.display = "flex";
   catContainer.style.flexDirection = "row";
   catContainer.style.justifyContent = "space-between";
-  catContainer.style.alignItems    = "center";
-  catContainer.style.marginTop     = "1rem";
-  catContainer.style.gap           = "0.75rem";
-
+  catContainer.style.alignItems = "center";
+  catContainer.style.marginTop = "1rem";
+  catContainer.style.gap = "0.75rem";
 
   let selectedImgUrl = "";
 
   function makeCategoryCard(label, imgUrl) {
     const wrapper = document.createElement("div");
-    wrapper.style.display       = "flex";
+    wrapper.style.display = "flex";
     wrapper.style.flexDirection = "column";
-    wrapper.style.alignItems    = "center";
-    wrapper.style.cursor        = "pointer";
+    wrapper.style.alignItems = "center";
+    wrapper.style.cursor = "pointer";
 
     const img = document.createElement("img");
-    img.src           = imgUrl;
-    img.alt           = label;
-    img.style.width   = "100px";
-    img.style.height  = "100px";
-    img.className     = "object-cover rounded-md border border-gray-300";
+    img.src = imgUrl;
+    img.alt = label;
+    img.style.width = "100px";
+    img.style.height = "100px";
+    img.className = "object-cover rounded-md border border-gray-300";
 
     const caption = document.createElement("span");
-    caption.textContent   = label;
-    caption.style.marginTop  = "0.5rem";
-    caption.style.fontSize   = "0.875rem";
+    caption.textContent = label;
+    caption.style.marginTop = "0.5rem";
+    caption.style.fontSize = "0.875rem";
     caption.style.fontWeight = "500";
-    caption.style.color      = "#4b5563";
+    caption.style.color = "#4b5563";
 
     wrapper.appendChild(img);
     wrapper.appendChild(caption);
@@ -796,19 +696,28 @@ function showCustomItemOverlay() {
     return { wrapper, label, url: imgUrl }; // return imgUrl so we know which URL to save
   }
 
-  // Produce 
-  const { wrapper: produceCard, label: produceLabel, url: produceUrl } =
-    makeCategoryCard("Produce", "/public/static/fruit.png");
+  // Produce
+  const {
+    wrapper: produceCard,
+    label: produceLabel,
+    url: produceUrl,
+  } = makeCategoryCard("Produce", "/public/static/fruit.png");
   catContainer.appendChild(produceCard);
 
   // Meat
-  const { wrapper: meatCard, label: meatLabel, url: meatUrl } =
-    makeCategoryCard("Meat", "/public/static/steak.png");
+  const {
+    wrapper: meatCard,
+    label: meatLabel,
+    url: meatUrl,
+  } = makeCategoryCard("Meat", "/public/static/steak.png");
   catContainer.appendChild(meatCard);
 
-  // Takeout 
-  const { wrapper: takeoutCard, label: takeoutLabel, url: takeoutUrl } =
-    makeCategoryCard("Takeout", "/public/static/takeout.jpg");
+  // Takeout
+  const {
+    wrapper: takeoutCard,
+    label: takeoutLabel,
+    url: takeoutUrl,
+  } = makeCategoryCard("Takeout", "/public/static/takeout.jpg");
   catContainer.appendChild(takeoutCard);
 
   modalBox.appendChild(catContainer);
@@ -821,9 +730,10 @@ function showCustomItemOverlay() {
   modalBox.appendChild(nameLabel);
 
   const nameInput = document.createElement("input");
-  nameInput.type        = "text";
-  nameInput.id          = "custom-name";
-  nameInput.className   = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
+  nameInput.type = "text";
+  nameInput.id = "custom-name";
+  nameInput.className =
+    "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
   nameInput.placeholder = "Optional";
   modalBox.appendChild(nameInput);
 
@@ -831,21 +741,25 @@ function showCustomItemOverlay() {
     [produceCard, meatCard, takeoutCard].forEach((c) => {
       c.querySelector("img").classList.remove("ring-2", "ring-emerald-500");
     });
-    cardElement.querySelector("img").classList.add("ring-2", "ring-emerald-500");
+    cardElement
+      .querySelector("img")
+      .classList.add("ring-2", "ring-emerald-500");
     nameInput.value = labelText;
     selectedImgUrl = imgUrl;
   }
 
-  produceCard.addEventListener("click", () =>
-    selectCategory(produceLabel, produceCard, produceUrl) // ← HERE
+  produceCard.addEventListener(
+    "click",
+    () => selectCategory(produceLabel, produceCard, produceUrl) // ← HERE
   );
-  meatCard.addEventListener("click", () =>
-    selectCategory(meatLabel, meatCard, meatUrl) // ← HERE
+  meatCard.addEventListener(
+    "click",
+    () => selectCategory(meatLabel, meatCard, meatUrl) // ← HERE
   );
-  takeoutCard.addEventListener("click", () =>
-    selectCategory(takeoutLabel, takeoutCard, takeoutUrl) // ← HERE
+  takeoutCard.addEventListener(
+    "click",
+    () => selectCategory(takeoutLabel, takeoutCard, takeoutUrl) // ← HERE
   );
-
 
   const expLabel = document.createElement("label");
   expLabel.setAttribute("for", "custom-exp");
@@ -854,9 +768,9 @@ function showCustomItemOverlay() {
   modalBox.appendChild(expLabel);
 
   const expInput = document.createElement("input");
-  expInput.type        = "date";
-  expInput.id          = "custom-exp";
-  expInput.className   = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
+  expInput.type = "date";
+  expInput.id = "custom-exp";
+  expInput.className = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
   const today = new Date();
   expInput.value = today.toISOString().split("T")[0];
   modalBox.appendChild(expInput);
@@ -866,7 +780,7 @@ function showCustomItemOverlay() {
 
   function makeButton(label, delta) {
     const btn = document.createElement("button");
-    btn.type       = "button";
+    btn.type = "button";
     btn.classList.add("exp-button");
     btn.textContent = label;
     btn.addEventListener("click", () => {
@@ -891,23 +805,22 @@ function showCustomItemOverlay() {
     selectedImgUrl = ""; // no photo if they typed their own name
   });
 
-
   const saveBtn = document.createElement("button");
-  saveBtn.type             = "button";
-  saveBtn.textContent      = "Save Item";
-  saveBtn.style.marginTop  = "1.5rem";
-  saveBtn.style.width      = "100%";
-  saveBtn.style.padding    = "0.75rem 1rem";
-  saveBtn.style.backgroundColor = "#10b981";  
-  saveBtn.style.color           = "#ffffff";
-  saveBtn.style.fontSize        = "1rem";
-  saveBtn.style.fontWeight      = "600";
-  saveBtn.style.border          = "none";
-  saveBtn.style.borderRadius    = "0.375rem";
-  saveBtn.style.cursor          = "pointer";
+  saveBtn.type = "button";
+  saveBtn.textContent = "Save Item";
+  saveBtn.style.marginTop = "1.5rem";
+  saveBtn.style.width = "100%";
+  saveBtn.style.padding = "0.75rem 1rem";
+  saveBtn.style.backgroundColor = "#10b981";
+  saveBtn.style.color = "#ffffff";
+  saveBtn.style.fontSize = "1rem";
+  saveBtn.style.fontWeight = "600";
+  saveBtn.style.border = "none";
+  saveBtn.style.borderRadius = "0.375rem";
+  saveBtn.style.cursor = "pointer";
 
   saveBtn.addEventListener("mouseenter", () => {
-    saveBtn.style.backgroundColor = "#059669";  
+    saveBtn.style.backgroundColor = "#059669";
   });
   saveBtn.addEventListener("mouseleave", () => {
     saveBtn.style.backgroundColor = "#10b981";
@@ -928,10 +841,7 @@ function showCustomItemOverlay() {
 
     let foundKey = null;
     Object.keys(current_fridge).forEach((existingKey) => {
-      if (
-        existingKey === baseName ||
-        existingKey.startsWith(baseName + " ")
-      ) {
+      if (existingKey === baseName || existingKey.startsWith(baseName + " ")) {
         const meta = current_fridge[existingKey];
         let existingDateISO;
         if (
@@ -979,8 +889,7 @@ function showCustomItemOverlay() {
         }
       });
 
-      const newSuffix =
-        highestSuffix === 0 ? "" : " " + (highestSuffix + 1);
+      const newSuffix = highestSuffix === 0 ? "" : " " + (highestSuffix + 1);
       const finalName = baseName + newSuffix;
 
       add_toFridge(finalName, "", daysUntilExp, selectedImgUrl || "");
@@ -992,17 +901,13 @@ function showCustomItemOverlay() {
   });
 }
 
-
 function showScanOverlay() {
-
   const modalBox = createModal();
-
 
   const titleH2 = document.createElement("h2");
   titleH2.className = "text-xl font-semibold text-gray-900";
   titleH2.textContent = "Scan & Add";
   modalBox.appendChild(titleH2);
-
 
   const barcodeLabel = document.createElement("label");
   barcodeLabel.setAttribute("for", "scan-barcode");
@@ -1010,15 +915,14 @@ function showScanOverlay() {
   barcodeLabel.textContent = "Barcode";
   modalBox.appendChild(barcodeLabel);
 
-
   const barcodeInput = document.createElement("input");
   barcodeInput.type = "text";
   barcodeInput.id = "scan-barcode";
-  barcodeInput.className = "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
+  barcodeInput.className =
+    "mt-1 block w-full border-gray-300 rounded-md shadow-sm";
   barcodeInput.placeholder = "e.g. 021130240302";
   modalBox.appendChild(barcodeInput);
   barcodeInput.focus();
-
 
   const lookupBtn = document.createElement("button");
   lookupBtn.type = "button";
@@ -1028,11 +932,9 @@ function showScanOverlay() {
   lookupBtn.textContent = "Lookup & Add";
   modalBox.appendChild(lookupBtn);
 
-
   const resultDiv = document.createElement("div");
   resultDiv.className = "mt-4";
   modalBox.appendChild(resultDiv);
-
 
   function runLookup() {
     const code = barcodeInput.value.trim();
@@ -1041,14 +943,105 @@ function showScanOverlay() {
       return;
     }
 
+    // // your lookup + scan button
+    // lookupButton.addEventListener("click", () => {
+    //   const barcode = inputbarcode.value.trim();
+    //   if (!barcode) {
+    //     alert("Enter a barcode");
+    //     return;
+    //   }
+    //   let data = apiresponse; // #TODO: replace with actual API call
+    //   if (lookupButton) {
+    //     lookupButton.addEventListener("click", () => {
+    //       const barcode = inputbarcode.value.trim();
+    //       if (!barcode) {
+    //         alert("Enter a barcode");
+    //         return;
+    //       }
+    //       // #TODO: replace with actual API call
+
+    //       let product = data.products[0];
+    //       let title = product.title;
+    //       let desc = product.description || "";
+    //       let img = product.images[0] || "";
+
+    //       productName.textContent = title;
+    //       productDescription.textContent = desc;
+    //       productImage.src = img;
+
+    //       // Example logic to match expiration table
+    //       let matched = false;
+    //       for (let item in expiration_table) {
+    //         if (title.toLowerCase().includes(item.toLowerCase())) {
+    //           matched = true;
+
+    //           add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
+    //           get_expected_expiration(item);
+    //           break;
+    //         }
+    //       }
+
+    //       if (!matched) {
+    //         add_toFridge(title, barcode, null, img);
+    //         alert("Item added to fridge with no expiration date: " + title);
+    //       }
+
+    //       // const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
+    //       // #TODO
+    //       // fetch(apiUrl)
+    //       //   .then((response) => {
+    //       //     if (!response.ok) {
+    //       //       throw new Error(`Error ${response.status}: ${response.statusText}`);
+    //       //     }
+    //       //     return response.json();
+    //       //   })
+    //       //   .then((data) => {
+    //       //     const product = data.products[0];
+    //       //     const title = product.title;
+    //       //     const desc = product.description || "";
+    //       //     const img = product.images[0] || "";
+
+    //       //     productName.textContent = title;
+    //       //     productDescription.textContent = desc;
+    //       //     productImage.src = img;
+
+    //       //     // Example logic to match expiration table
+    //       //     let matched = false;
+    //       //     console.log(1);
+    //       //     for (let item in expiration_table) {
+    //       //       if (title.toLowerCase().includes(item.toLowerCase())) {
+    //       //         matched = true;
+    //       //         console.log("Matched:", item);
+    //       //         add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
+    //       //         get_expected_expiration(item);
+    //       //         console.log(2);
+    //       //         break;
+    //       //       }
+    //       //     }
+    //       //     if (!matched) {
+    //       //       add_toFridge(title, barcode, null);
+    //       //       alert("Item added to fridge with no expiration date: " + title);
+    //       //     }
+    //       //   });
+    //     });
+    //   }
+    // });
 
     let data = apiresponse; // #TODO: replace with actual API call
+    const apiUrl = `/lookup?barcode=${code}`;
+    // fetch(apiUrl)
+    //   .then((response) => {
+    //     if (!response.ok) {
+    //       throw new Error(`Error ${response.status}: ${response.statusText}`);
+    //     }
+    //     return response.json();
+    //   })
+    //   .then((data) => {
 
     const product = data.products[0];
     const title = product.title;
     const desc = product.description || "";
     const img = product.images[0] || "";
-
 
     resultDiv.innerHTML = `
       <div class="lookup-result flex items-start gap-4 mt-2">
@@ -1060,7 +1053,6 @@ function showScanOverlay() {
         </div>
       </div>
     `;
-
 
     let matched = false;
     for (let item in expiration_table) {
@@ -1086,6 +1078,4 @@ function showScanOverlay() {
   });
 }
 
-
 export { load_fromFridge, renderFridge, current_fridge };
-

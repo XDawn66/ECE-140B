@@ -79,9 +79,8 @@ def check_session_time_out():
      connection.close()
 
 
-
-@app.get('/API_KEY_PLEASE')
-async def API(request: Request):
+@app.get('/', response_class=HTMLResponse)
+async def login_page(request: Request):
     check_session_time_out()
     val = request.cookies.get('session_id')
     if val:
@@ -89,19 +88,7 @@ async def API(request: Request):
         if ses:
             user = await get_user_by_id(ses["user_id"])
             if user:
-                return []
-    return []
-
-@app.get('/', response_class=HTMLResponse)
-async def login_page(request: Request):
-    # check_session_time_out()
-    # val = request.cookies.get('session_id')
-    # if val:
-    #     ses = await get_session(val)
-    #     if ses:
-    #         user = await get_user_by_id(ses["user_id"])
-    #         if user:
-    #             return HTMLResponse(read_html("app/public/luma.html"))
+                return HTMLResponse(read_html("app/public/luma_starter.html"))
     return HTMLResponse(read_html("app/public/luma_starter.html"))
     
 @app.get('/login', response_class=HTMLResponse)
@@ -129,15 +116,7 @@ async def login(request: Request):
 
     if not use or use['password'] != pw:
         return HTMLResponse(get_error_html(user), status_code=403)
-    
-    # id = str(uuid.uuid4())
-    # if use:
-    #     profile_html = read_html("app/public/luma_home.html")
-    #     response = HTMLResponse(profile_html)
-    #     response.set_cookie("session_id", id)
-    #     usering = await get_user_by_username(user.lower())
-    #     dosmth = await create_session(usering["id"], id)
-    #     return response
+
 
     session_id = str(uuid.uuid4())
     html_body  = read_html("app/public/fridge.html")
@@ -177,7 +156,7 @@ async def out(request: Request) -> HTMLResponse:
     id = str(uuid.uuid4())
     if not users:
         try:
-            profile_html = read_html("app/public/home.html")
+            profile_html = read_html("app/public/luma_starter.html")
             response = HTMLResponse(profile_html)
             response.set_cookie("session_id", id)
             insert_query = "INSERT INTO users (username, password, email, fname, lname) VALUES (%s, %s, %s, %s, %s)"
@@ -209,77 +188,14 @@ async def out(request: Request) -> HTMLResponse:
     return RedirectResponse(url=f"/login")
 
 
-@app.get('/devices/look') 
-async def out(request: Request):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    val = request.cookies.get('session_id')
-    user = None
-    if val:
-        ses = await get_session(val)
-        if ses:
-            user = ses["user_id"]
-            cursor.execute(f'SELECT name FROM devices WHERE user_id={user}')
-            return cursor.fetchall()
-    return []
-
-
-@app.post('/devices/{device}/{new_device}') 
-async def out(request: Request, device: str, new_device: str):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    val = request.cookies.get('session_id')
-    user = None
-    if val:
-        ses = await get_session(val)
-        if ses:
-            user = ses["user_id"]
-            cursor.execute(f'UPDATE devices SET name="{new_device}" WHERE user_id={user} AND name="{device}"')
-            connection.commit()
-            return
-    return
-
-@app.put('/devices/{new_device}') 
-async def out(request: Request, new_device: str):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    val = request.cookies.get('session_id')
-    user = None
-    if val:
-        ses = await get_session(val)
-        if ses:
-            user = ses["user_id"]
-            cursor.execute('INSERT INTO devices (name, user_id) VALUES (%s, %s)', (new_device, user))
-            connection.commit()
-            return
-    return
-
-@app.delete('/devices/{device}') 
-async def out(request: Request, device: str):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    val = request.cookies.get('session_id')
-    user = None
-    if val:
-        ses = await get_session(val)
-        if ses:
-            user = ses["user_id"]
-            cursor.execute('DELETE FROM devices WHERE user_id = %s AND name = %s', (user, device))
-            connection.commit()
-            return
-    return
-
 @app.post("/logout")
 async def logout(request:Request):
     """Clear session and redirect to login page"""
-    # TODO: 8. Create redirect response to /login
     val = request.cookies.get('session_id')
     if val:
         await delete_session(val)
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
-    # TODO: 9. Delete sessionId cookie
     response.delete_cookie("session_id")
-    # TODO: 10. Return response
     return response
 
 ###################################
