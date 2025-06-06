@@ -29,7 +29,7 @@ load_dotenv()
 
 EMAIL = "example@ucsd.edu"
 PID = "cc"
-apiKey = "oyiimv1msh9f66dtomkhcqnhceanzg"
+apiKey = "12sva2k3ixzi0c976degjenbkqod4b"
 
 from .database import (
     create_tables,

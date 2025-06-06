@@ -943,132 +943,53 @@ function showScanOverlay() {
       return;
     }
 
-    // // your lookup + scan button
-    // lookupButton.addEventListener("click", () => {
-    //   const barcode = inputbarcode.value.trim();
-    //   if (!barcode) {
-    //     alert("Enter a barcode");
-    //     return;
-    //   }
-    //   let data = apiresponse; // #TODO: replace with actual API call
-    //   if (lookupButton) {
-    //     lookupButton.addEventListener("click", () => {
-    //       const barcode = inputbarcode.value.trim();
-    //       if (!barcode) {
-    //         alert("Enter a barcode");
-    //         return;
-    //       }
-    //       // #TODO: replace with actual API call
-
-    //       let product = data.products[0];
-    //       let title = product.title;
-    //       let desc = product.description || "";
-    //       let img = product.images[0] || "";
-
-    //       productName.textContent = title;
-    //       productDescription.textContent = desc;
-    //       productImage.src = img;
-
-    //       // Example logic to match expiration table
-    //       let matched = false;
-    //       for (let item in expiration_table) {
-    //         if (title.toLowerCase().includes(item.toLowerCase())) {
-    //           matched = true;
-
-    //           add_toFridge(title, barcode, expiration_table[item], img); // product name, barcode, matched item
-    //           get_expected_expiration(item);
-    //           break;
-    //         }
-    //       }
-
-    //       if (!matched) {
-    //         add_toFridge(title, barcode, null, img);
-    //         alert("Item added to fridge with no expiration date: " + title);
-    //       }
-
-    //       // const apiUrl = `/lookup?barcode=${barcode}`; // Your FastAPI backend
-    //       // #TODO
-    //       // fetch(apiUrl)
-    //       //   .then((response) => {
-    //       //     if (!response.ok) {
-    //       //       throw new Error(`Error ${response.status}: ${response.statusText}`);
-    //       //     }
-    //       //     return response.json();
-    //       //   })
-    //       //   .then((data) => {
-    //       //     const product = data.products[0];
-    //       //     const title = product.title;
-    //       //     const desc = product.description || "";
-    //       //     const img = product.images[0] || "";
-
-    //       //     productName.textContent = title;
-    //       //     productDescription.textContent = desc;
-    //       //     productImage.src = img;
-
-    //       //     // Example logic to match expiration table
-    //       //     let matched = false;
-    //       //     console.log(1);
-    //       //     for (let item in expiration_table) {
-    //       //       if (title.toLowerCase().includes(item.toLowerCase())) {
-    //       //         matched = true;
-    //       //         console.log("Matched:", item);
-    //       //         add_toFridge(title, barcode, expiration_table[item]); // product name, barcode, matched item
-    //       //         get_expected_expiration(item);
-    //       //         console.log(2);
-    //       //         break;
-    //       //       }
-    //       //     }
-    //       //     if (!matched) {
-    //       //       add_toFridge(title, barcode, null);
-    //       //       alert("Item added to fridge with no expiration date: " + title);
-    //       //     }
-    //       //   });
-    //     });
-    //   }
-    // });
-
-    let data = apiresponse; // #TODO: replace with actual API call
     const apiUrl = `/lookup?barcode=${code}`;
-    // fetch(apiUrl)
-    //   .then((response) => {
-    //     if (!response.ok) {
-    //       throw new Error(`Error ${response.status}: ${response.statusText}`);
-    //     }
-    //     return response.json();
-    //   })
-    //   .then((data) => {
+    fetch(apiUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const product = data.products[0];
+        const title = product.title;
+        const desc = product.description || "";
+        const img = product.images[0] || "";
 
-    const product = data.products[0];
-    const title = product.title;
-    const desc = product.description || "";
-    const img = product.images[0] || "";
-
-    resultDiv.innerHTML = `
-      <div class="lookup-result flex items-start gap-4 mt-2">
-        <img id="popupProductImage" src="${img}" alt="${title}"
-             class="w-16 h-16 object-cover border border-gray-200 rounded-md" />
-        <div class="lookup-info">
-          <h3 id="popupProductName" class="text-lg font-medium text-gray-900">${title}</h3>
-          <p id="popupProductDescription" class="text-sm text-gray-600">${desc}</p>
+        resultDiv.innerHTML = `
+        <div class="lookup-result flex items-start gap-4 mt-2">
+          <img id="popupProductImage" src="${img}" alt="${title}"
+               class="w-16 h-16 object-cover border border-gray-200 rounded-md" />
+          <div class="lookup-info">
+            <h3 id="popupProductName" class="text-lg font-medium text-gray-900">${title}</h3>
+            <p id="popupProductDescription" class="text-sm text-gray-600">${desc}</p>
+          </div>
         </div>
-      </div>
-    `;
+      `;
 
-    let matched = false;
-    for (let item in expiration_table) {
-      if (title.toLowerCase().includes(item.toLowerCase())) {
-        matched = true;
-        add_toFridge(title, code, expiration_table[item], img);
-        break;
-      }
-    }
+        let matched = false;
+        for (let item in expiration_table) {
+          if (title.toLowerCase().includes(item.toLowerCase())) {
+            matched = true;
+            add_toFridge(title, code, expiration_table[item], img);
+            get_expected_expiration(item);
+            break;
+          }
+        }
 
-    if (!matched) {
-      add_toFridge(title, code, null, img);
-      alert("Item added to fridge with no expiration date: " + title);
-    }
+        if (!matched) {
+          add_toFridge(title, code, null, img);
+          alert("Item added to fridge with no expiration date: " + title);
+        }
+      })
+      .catch((error) => {
+        console.error("Lookup failed:", error);
+        alert("Failed to look up barcode. Please try again.");
+      });
   }
 
+  // Attach event listeners
   lookupBtn.addEventListener("click", runLookup);
   barcodeInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
